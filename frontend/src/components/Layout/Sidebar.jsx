@@ -28,9 +28,6 @@ export default function Sidebar() {
         <NavLink to="/subjects" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
           <LibraryBig size={18} /> Subjects
         </NavLink>
-        <NavLink to="/focus" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-          <Timer size={18} /> Focus Timer
-        </NavLink>
       </nav>
 
       <div className="sidebar-footer">

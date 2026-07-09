@@ -183,10 +183,12 @@ input:focus, select:focus, textarea:focus {
 }
 
 .sidebar-image {
-  width: 80px;
+  width: 100%;
+  max-width: 200px;
   border-radius: var(--radius-lg);
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-md);
+  object-fit: cover;
 }
 
 .sidebar-nav {

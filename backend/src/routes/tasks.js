@@ -55,7 +55,6 @@ router.get('/:id', async (req, res) => {
         recurrence: true,
         subject: true,
         subtopic: true,
-        timeLogs: { orderBy: { startedAt: 'desc' } },
       },
     });
     if (!task) return res.status(404).json({ error: 'Task not found' });
@@ -109,14 +108,13 @@ router.put('/:id', async (req, res) => {
     delete taskData.subtopic;
     delete taskData.timeLogs;
 
+    if (date !== undefined) taskData.date = date ? new Date(date) : null;
+    if (startDate !== undefined) taskData.startDate = startDate ? new Date(startDate) : null;
+    if (endDate !== undefined) taskData.endDate = endDate ? new Date(endDate) : null;
+
     const task = await prisma.task.update({
       where: { id: req.params.id },
-      data: {
-        ...taskData,
-        date: date ? new Date(date) : null,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
-      },
+      data: taskData,
       include: { recurrence: true, subject: true, subtopic: true },
     });
 

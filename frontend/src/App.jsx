@@ -8,7 +8,6 @@ import WeeklyView from './pages/WeeklyView';
 import MonthlyView from './pages/MonthlyView';
 import AllTasksView from './pages/AllTasksView';
 import SubjectsView from './pages/SubjectsView';
-import FocusTimer from './pages/FocusTimer';
 
 function App() {
   return (
@@ -26,7 +25,6 @@ function App() {
                   <Route path="/monthly" element={<MonthlyView />} />
                   <Route path="/tasks" element={<AllTasksView />} />
                   <Route path="/subjects" element={<SubjectsView />} />
-                  <Route path="/focus" element={<FocusTimer />} />
                 </Routes>
               </div>
             </div>

@@ -15,9 +15,8 @@ export default function TopBar() {
       case '/weekly': return 'Weekly Plan';
       case '/monthly': return 'Monthly Overview';
       case '/tasks': return 'All Tasks';
-      case '/subjects': return 'Subjects Manager';
-      case '/focus': return 'Focus Session';
-      default: return '';
+      case '/subjects': return 'Subjects';
+      default: return 'UPSC Study Planner';
     }
   };
 

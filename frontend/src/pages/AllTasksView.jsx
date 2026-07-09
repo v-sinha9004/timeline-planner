@@ -52,7 +52,8 @@ export default function AllTasksView() {
               <th style={{ width: '40px' }}></th>
               <th>Task</th>
               <th>Subject</th>
-              <th>Dates</th>
+              <th>Start Date</th>
+              <th>End Date</th>
               <th>Priority</th>
               <th>Status</th>
               <th>Actions</th>
@@ -69,7 +70,7 @@ export default function AllTasksView() {
               ))
             ) : (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
                   No tasks found matching your filters.
                 </td>
               </tr>

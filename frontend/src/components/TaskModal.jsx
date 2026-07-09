@@ -9,6 +9,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
 
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState('');
+  const [subtopicId, setSubtopicId] = useState('');
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [priority, setPriority] = useState('MEDIUM');
@@ -18,12 +19,14 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
       if (taskToEdit) {
         setTitle(taskToEdit.title || '');
         setSubjectId(taskToEdit.subjectId || '');
+        setSubtopicId(taskToEdit.subtopicId || '');
         setStartDate(taskToEdit.startDate || format(new Date(), 'yyyy-MM-dd'));
         setEndDate(taskToEdit.endDate || format(new Date(), 'yyyy-MM-dd'));
         setPriority(taskToEdit.priority || 'MEDIUM');
       } else {
         setTitle('');
         setSubjectId('');
+        setSubtopicId('');
         setStartDate(format(new Date(), 'yyyy-MM-dd'));
         setEndDate(format(new Date(), 'yyyy-MM-dd'));
         setPriority('MEDIUM');
@@ -43,6 +46,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
     const taskData = {
       title: title.trim(),
       subjectId,
+      subtopicId,
       startDate,
       endDate,
       priority,
@@ -86,7 +90,10 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
                 <label style={{ fontWeight: 500 }}>Subject *</label>
                 <select 
                   value={subjectId}
-                  onChange={e => setSubjectId(e.target.value)}
+                  onChange={e => {
+                    setSubjectId(e.target.value);
+                    setSubtopicId('');
+                  }}
                   required
                 >
                   <option value="" disabled>Select Subject</option>
@@ -95,6 +102,34 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
                   ))}
                 </select>
               </div>
+
+              {subjectId && (
+                <div className="flex-col gap-sm" style={{ flex: 1 }}>
+                  <label style={{ fontWeight: 500 }}>Sub-topic</label>
+                  {(() => {
+                    const selectedSubject = subjects.find(s => s.id === subjectId);
+                    const subtopics = selectedSubject?.subtopics || [];
+                    if (subtopics.length === 0) {
+                      return (
+                        <div style={{ padding: '8px 12px', color: 'var(--text-secondary)', fontSize: '14px', fontStyle: 'italic', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                          No sub-topics
+                        </div>
+                      );
+                    }
+                    return (
+                      <select 
+                        value={subtopicId}
+                        onChange={e => setSubtopicId(e.target.value)}
+                      >
+                        <option value="">None</option>
+                        {subtopics.map(st => (
+                          <option key={st.id} value={st.id}>{st.name}</option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-md">

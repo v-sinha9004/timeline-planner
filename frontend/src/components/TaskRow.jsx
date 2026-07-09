@@ -1,16 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { Edit2, Trash2, Timer, Check, X } from 'lucide-react';
+import { Edit2, Trash2, Check, X } from 'lucide-react';
 import SubjectBadge from './SubjectBadge';
 import { useData } from '../contexts/DataContext';
-import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 
 export default function TaskRow({ task, subject }) {
   const { updateTask, deleteTask } = useData();
-  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editPriority, setEditPriority] = useState(task.priority);
+  const [editStartDate, setEditStartDate] = useState(task.startDate || '');
+  const [editEndDate, setEditEndDate] = useState(task.endDate || '');
   const inputRef = useRef(null);
 
   const isCompleted = task.status === 'COMPLETED';
@@ -33,12 +33,20 @@ export default function TaskRow({ task, subject }) {
     if (editPriority !== task.priority) {
       updates.priority = editPriority;
     }
+    if (editStartDate !== (task.startDate || '')) {
+      updates.startDate = editStartDate;
+    }
+    if (editEndDate !== (task.endDate || '')) {
+      updates.endDate = editEndDate;
+    }
     
     if (Object.keys(updates).length > 0) {
       updateTask(task.id, updates);
     } else {
       setEditTitle(task.title);
       setEditPriority(task.priority);
+      setEditStartDate(task.startDate || '');
+      setEditEndDate(task.endDate || '');
     }
     setIsEditing(false);
   };
@@ -46,6 +54,8 @@ export default function TaskRow({ task, subject }) {
   const handleCancel = () => {
     setEditTitle(task.title);
     setEditPriority(task.priority);
+    setEditStartDate(task.startDate || '');
+    setEditEndDate(task.endDate || '');
     setIsEditing(false);
   };
 
@@ -61,10 +71,6 @@ export default function TaskRow({ task, subject }) {
       case 'LOW': return '#10b981';
       default: return 'var(--border-strong)';
     }
-  };
-
-  const startFocus = () => {
-    navigate('/focus', { state: { taskId: task.id } });
   };
 
   return (
@@ -100,10 +106,38 @@ export default function TaskRow({ task, subject }) {
         )}
       </td>
       <td>
-        <SubjectBadge subject={subject} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+          <SubjectBadge subject={subject} />
+          {task.subtopicId && subject && subject.subtopics && (
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '4px' }}>
+              ↳ {subject.subtopics.find(st => st.id === task.subtopicId)?.name || 'Unknown Sub-topic'}
+            </span>
+          )}
+        </div>
       </td>
       <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-        {task.startDate ? `${format(new Date(task.startDate), 'MMM d, yyyy')} - ${task.endDate ? format(new Date(task.endDate), 'MMM d, yyyy') : '?'}` : '--'}
+        {isEditing ? (
+          <input 
+            type="date" 
+            value={editStartDate}
+            onChange={(e) => setEditStartDate(e.target.value)}
+            style={{ fontSize: '12px', padding: '2px 4px', width: '110px', height: '24px' }}
+          />
+        ) : (
+          task.startDate ? format(new Date(task.startDate), 'MMM d, yyyy') : '--'
+        )}
+      </td>
+      <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+        {isEditing ? (
+          <input 
+            type="date" 
+            value={editEndDate}
+            onChange={(e) => setEditEndDate(e.target.value)}
+            style={{ fontSize: '12px', padding: '2px 4px', width: '110px', height: '24px' }}
+          />
+        ) : (
+          task.endDate ? format(new Date(task.endDate), 'MMM d, yyyy') : '--'
+        )}
       </td>
       <td>
         {isEditing ? (
@@ -153,11 +187,6 @@ export default function TaskRow({ task, subject }) {
           <button className="btn-icon" title="Delete" onClick={() => deleteTask(task.id)}>
             <Trash2 size={16} />
           </button>
-          {!isCompleted && (
-            <button className="btn-icon" title="Start Timer" onClick={startFocus}>
-              <Timer size={16} />
-            </button>
-          )}
         </div>
       </td>
     </tr>

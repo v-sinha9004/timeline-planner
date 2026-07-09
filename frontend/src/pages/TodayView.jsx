@@ -40,7 +40,8 @@ export default function TodayView() {
                 <th style={{ width: '40px' }}></th>
                 <th>Task</th>
                 <th>Subject</th>
-                <th>Dates</th>
+                <th>Start Date</th>
+                <th>End Date</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -65,15 +66,6 @@ export default function TodayView() {
         )}
       </div>
 
-      {tasks.length > 0 && (
-        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: 'var(--accent-softer)', borderRadius: 'var(--radius-lg)' }}>
-          <div>
-            <h4 style={{ color: 'var(--accent-hover)' }}>Focus Session</h4>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Ready to deep work?</p>
-          </div>
-          <Link to="/focus" className="btn btn-primary">Start Timer</Link>
-        </div>
-      )}
 
       <QuickAdd />
       <ConfettiOverlay show={allDone} />

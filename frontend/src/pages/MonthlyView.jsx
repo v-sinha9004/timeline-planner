@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth } from 'date-fns';
 import { useData } from '../contexts/DataContext';
 
 export default function MonthlyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { getTasksForDate, getSubjectById } = useData();
+  const [selectedDay, setSelectedDay] = useState(null);
+  const { getTasksForDate, getSubjectById, updateTask } = useData();
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -34,19 +35,54 @@ export default function MonthlyView() {
         <div 
           className={`calendar-cell ${!isCurrentMonth ? 'other-month' : ''}`}
           key={day}
+          onClick={() => setSelectedDay(cloneDay)}
         >
           <div className={`date-number ${isToday ? 'today' : ''}`}>{formattedDate}</div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {dayTasks.slice(0, 3).map(task => {
               const subject = getSubjectById(task.subjectId);
+              const isCompleted = task.status === 'COMPLETED';
+
               return (
                 <div 
                   key={task.id} 
                   className="task-pill"
-                  style={{ backgroundColor: subject ? subject.color : 'var(--text-tertiary)' }}
+                  style={{ 
+                    backgroundColor: subject ? subject.color : 'var(--text-tertiary)',
+                    opacity: isCompleted ? 0.6 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 6px'
+                  }}
                 >
-                  {task.title}
+                  <div 
+                    className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                    }}
+                    style={{ 
+                      width: '14px', 
+                      height: '14px', 
+                      flexShrink: 0, 
+                      borderRadius: '3px', 
+                      borderWidth: '1.5px',
+                      borderColor: isCompleted ? 'var(--accent)' : 'var(--border-strong)',
+                      backgroundColor: isCompleted ? 'var(--accent)' : 'var(--bg-primary)'
+                    }}
+                  >
+                    {isCompleted && <Check size={10} color="white" />}
+                  </div>
+                  <span style={{ 
+                    textDecoration: isCompleted ? 'line-through' : 'none',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {task.title}
+                  </span>
                 </div>
               );
             })}
@@ -87,6 +123,78 @@ export default function MonthlyView() {
         ))}
         {rows}
       </div>
+
+      {selectedDay && (
+        <div className="modal-overlay" onClick={() => setSelectedDay(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0 }}>
+                {format(selectedDay, 'EEEE, MMMM d, yyyy')}
+              </h3>
+              <button className="btn-icon" onClick={() => setSelectedDay(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {(() => {
+                const dayTasks = getTasksForDate(format(selectedDay, 'yyyy-MM-dd'));
+                if (dayTasks.length === 0) {
+                  return <div style={{ color: 'var(--text-tertiary)', textAlign: 'center', padding: '20px' }}>No tasks for this day.</div>;
+                }
+                return dayTasks.map(task => {
+                  const subject = getSubjectById(task.subjectId);
+                  const isCompleted = task.status === 'COMPLETED';
+
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="task-pill"
+                      style={{ 
+                        backgroundColor: subject ? subject.color : 'var(--text-tertiary)',
+                        opacity: isCompleted ? 0.6 : 1,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        padding: '8px 12px',
+                        fontSize: '14px',
+                        borderRadius: '6px'
+                      }}
+                    >
+                      <div 
+                        className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                        }}
+                        style={{ 
+                          width: '18px', 
+                          height: '18px', 
+                          marginTop: '1px',
+                          flexShrink: 0, 
+                          borderRadius: '4px', 
+                          borderWidth: '1.5px',
+                          borderColor: isCompleted ? 'var(--accent)' : 'var(--border-strong)',
+                          backgroundColor: isCompleted ? 'var(--accent)' : 'var(--bg-primary)'
+                        }}
+                      >
+                        {isCompleted && <Check size={14} color="white" />}
+                      </div>
+                      <span style={{ 
+                        textDecoration: isCompleted ? 'line-through' : 'none',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
+                        overflow: 'visible'
+                      }}>
+                        {task.title}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

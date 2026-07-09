@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useData } from '../contexts/DataContext';
 
 export default function WeeklyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { getTasksForDate, getSubjectById } = useData();
+  const { getTasksForDate, getSubjectById, updateTask } = useData();
   
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
   const days = Array.from({ length: 7 }).map((_, i) => addDays(startDate, i));
@@ -63,6 +63,8 @@ export default function WeeklyView() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px' }}>
                 {dayTasks.map(task => {
                   const subject = getSubjectById(task.subjectId);
+                  const isCompleted = task.status === 'COMPLETED';
+
                   return (
                     <div 
                       key={task.id} 
@@ -74,10 +76,38 @@ export default function WeeklyView() {
                         fontSize: '13px',
                         fontWeight: 500,
                         boxShadow: 'var(--shadow-sm)',
-                        wordBreak: 'break-word'
+                        wordBreak: 'break-word',
+                        opacity: isCompleted ? 0.6 : 1,
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px'
                       }}
                     >
-                      {task.title}
+                      <div 
+                        className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                        }}
+                        style={{ 
+                          marginTop: '2px', 
+                          width: '16px', 
+                          height: '16px', 
+                          flexShrink: 0, 
+                          borderRadius: '4px',
+                          borderWidth: '1.5px',
+                          borderColor: isCompleted ? 'var(--accent)' : 'var(--border-strong)',
+                          backgroundColor: isCompleted ? 'var(--accent)' : 'var(--bg-primary)'
+                        }}
+                      >
+                        {isCompleted && <Check size={12} color="white" />}
+                      </div>
+                      <span style={{ 
+                        textDecoration: isCompleted ? 'line-through' : 'none',
+                        wordBreak: 'break-word'
+                      }}>
+                        {task.title}
+                      </span>
                     </div>
                   );
                 })}
