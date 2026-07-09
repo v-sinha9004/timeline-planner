@@ -29,7 +29,7 @@ export default function WeeklyView() {
         </h3>
       </div>
 
-      {syncStatus === 'syncing' ? (
+      {syncStatus === 'fetching' ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 0', color: '#db2777', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
           <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
           <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
@@ -96,15 +96,48 @@ export default function WeeklyView() {
                         className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
+                          const getAllTaskDates = (t) => {
+                            if (t.startDate && t.endDate) {
+                              try {
+                                const start = new Date(t.startDate);
+                                const end = new Date(t.endDate);
+                                if (!isNaN(start) && !isNaN(end) && start <= end) {
+                                  const dates = [];
+                                  let d = start;
+                                  while(d <= end) {
+                                    dates.push(format(d, 'yyyy-MM-dd'));
+                                    d = addDays(d, 1);
+                                  }
+                                  return dates;
+                                }
+                              } catch (e) {}
+                            } else if (t.startDate) return [t.startDate.substring(0, 10)];
+                            else if (t.endDate) return [t.endDate.substring(0, 10)];
+                            else if (t.date) return [t.date.substring(0, 10)];
+                            return [];
+                          };
+
                           let newCompletedDates = [...(task.completedDates || [])];
                           if (isCompleted) {
                              newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
                              const updates = { completedDates: newCompletedDates };
-                             if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+                             if (task.status === 'COMPLETED') {
+                               updates.status = 'IN_PROGRESS';
+                               const allDates = getAllTaskDates(task);
+                               if (allDates.length > 0) {
+                                 updates.completedDates = allDates.filter(d => d !== dateStr);
+                               }
+                             }
                              updateTask(task.id, updates);
                           } else {
                              newCompletedDates.push(dateStr);
-                             updateTask(task.id, { completedDates: newCompletedDates });
+                             const allDates = getAllTaskDates(task);
+                             const isAllCompleted = allDates.length > 0 && allDates.every(d => newCompletedDates.includes(d));
+                             const updates = { completedDates: newCompletedDates };
+                             if (isAllCompleted) {
+                               updates.status = 'COMPLETED';
+                             }
+                             updateTask(task.id, updates);
                           }
                         }}
                         style={{ 

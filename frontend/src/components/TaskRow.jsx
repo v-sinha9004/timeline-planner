@@ -51,22 +51,57 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
     }
   }, [isEditing]);
 
+  const getAllTaskDates = (t) => {
+    if (t.startDate && t.endDate) {
+      try {
+        const start = parseISO(t.startDate);
+        const end = parseISO(t.endDate);
+        if (isValid(start) && isValid(end) && start <= end) {
+          return eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
+        }
+      } catch (e) {}
+    } else if (t.startDate) {
+      return [t.startDate.substring(0, 10)];
+    } else if (t.endDate) {
+      return [t.endDate.substring(0, 10)];
+    } else if (t.date) {
+      return [t.date.substring(0, 10)];
+    }
+    return [];
+  };
+
   const toggleComplete = () => {
     if (dateStr) {
       let newCompletedDates = [...(task.completedDates || [])];
       if (isCompleted) {
         newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
         const updates = { completedDates: newCompletedDates };
-        if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+        if (task.status === 'COMPLETED') {
+          updates.status = 'IN_PROGRESS';
+          // If it was fully completed, populate all other dates so they remain checked
+          const allDates = getAllTaskDates(task);
+          if (allDates.length > 0) {
+            updates.completedDates = allDates.filter(d => d !== dateStr);
+          }
+        }
         updateTask(task.id, updates);
       } else {
         newCompletedDates.push(dateStr);
-        updateTask(task.id, { completedDates: newCompletedDates });
+        // Check if all dates are now completed
+        const allDates = getAllTaskDates(task);
+        const isAllCompleted = allDates.length > 0 && allDates.every(d => newCompletedDates.includes(d));
+        const updates = { completedDates: newCompletedDates };
+        if (isAllCompleted) {
+          updates.status = 'COMPLETED';
+        }
+        updateTask(task.id, updates);
       }
     } else {
       const updates = { status: isCompleted ? 'PENDING' : 'COMPLETED' };
       if (isCompleted) {
         updates.completedDates = [];
+      } else {
+        updates.completedDates = getAllTaskDates(task);
       }
       updateTask(task.id, updates);
     }

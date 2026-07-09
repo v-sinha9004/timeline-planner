@@ -48,7 +48,7 @@ export default function AllTasksView() {
       </div>
 
       <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '12px 24px', border: '1px solid var(--border)' }}>
-        {syncStatus === 'syncing' ? (
+        {syncStatus === 'fetching' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
             <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
             <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>

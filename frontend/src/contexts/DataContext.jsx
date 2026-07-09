@@ -79,7 +79,7 @@ export function DataProvider({ children }) {
     }
 
     // 2. Fetch fresh from DB asynchronously
-    dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+    dispatch({ type: 'SET_SYNC_STATUS', payload: 'fetching' });
 
     Promise.all([
       fetch(`${API_BASE}/api/subjects`).then(res => res.json()).catch(() => null),
