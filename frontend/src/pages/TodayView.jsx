@@ -97,8 +97,6 @@ export default function TodayView() {
         )}
       </div>
 
-
-      <QuickAdd />
       <ConfettiOverlay show={allDone} />
     </div>
   );
