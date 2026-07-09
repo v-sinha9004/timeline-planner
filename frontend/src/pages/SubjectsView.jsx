@@ -1,15 +1,28 @@
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Plus } from 'lucide-react';
+import SubjectModal from '../components/SubjectModal';
 
 export default function SubjectsView() {
   const { subjects } = useData();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subjectToEdit, setSubjectToEdit] = useState(null);
+
+  const openNewModal = () => {
+    setSubjectToEdit(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (subject) => {
+    setSubjectToEdit(subject);
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="subjects-view">
       <div className="subjects-grid">
         {subjects.map(subject => (
-          <div key={subject.id} className="subject-card">
+          <div key={subject.id} className="subject-card" onClick={() => openEditModal(subject)} style={{ cursor: 'pointer' }}>
             <div className="subject-color-bar" style={{ backgroundColor: subject.color }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <span style={{ fontSize: '32px' }}>{subject.icon}</span>
@@ -34,6 +47,7 @@ export default function SubjectsView() {
         
         <div 
           className="subject-card" 
+          onClick={openNewModal}
           style={{ 
             border: '2px dashed var(--border-strong)', 
             display: 'flex', 
@@ -48,6 +62,12 @@ export default function SubjectsView() {
           <h3 style={{ margin: 0 }}>Add Subject</h3>
         </div>
       </div>
+
+      <SubjectModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        subjectToEdit={subjectToEdit} 
+      />
     </div>
   );
 }

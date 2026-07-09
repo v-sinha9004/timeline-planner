@@ -12,6 +12,16 @@ const DEFAULT_SUBJECTS = [
   { id: 'subj-essay-001', name: 'Essay', color: '#a3866a', icon: '✍️', order: 6, subtopics: [] },
   { id: 'subj-csat-001', name: 'CSAT', color: '#2dd4bf', icon: '🧠', order: 7, subtopics: [] },
   { id: 'subj-current-affairs-001', name: 'Current Affairs', color: '#f87171', icon: '📰', order: 8, subtopics: [] },
+  { id: 'subj-governance-001', name: 'Governance', color: '#6366f1', icon: '🏛️', order: 9, subtopics: [] },
+  { id: 'subj-anthropology-001', name: 'Anthropology', color: '#ec4899', icon: '👥', order: 10, subtopics: [] },
+  { id: 'subj-internal-security-001', name: 'Internal Security', color: '#64748b', icon: '🛡️', order: 11, subtopics: [] },
+  { id: 'subj-amac-001', name: 'AMAC', color: '#d97706', icon: '🏺', order: 12, subtopics: [] },
+  { id: 'subj-world-history-001', name: 'World History', color: '#14b8a6', icon: '🗺️', order: 13, subtopics: [] },
+  { id: 'subj-society-001', name: 'Society', color: '#eab308', icon: '🤝', order: 14, subtopics: [] },
+  { id: 'subj-social-justice-001', name: 'Social Justice', color: '#8b5cf6', icon: '✊', order: 15, subtopics: [] },
+  { id: 'subj-ir-001', name: 'International Relations', color: '#0ea5e9', icon: '🌐', order: 16, subtopics: [] },
+  { id: 'subj-environment-001', name: 'Environment', color: '#22c55e', icon: '🌱', order: 17, subtopics: [] },
+  { id: 'subj-disaster-mgmt-001', name: 'Disaster Management', color: '#ef4444', icon: '🌪️', order: 18, subtopics: [] },
 ];
 
 const initialState = {
@@ -165,12 +175,27 @@ export function DataProvider({ children }) {
     });
   }, [state.tasks]);
 
+  const addSubject = useCallback((subject) => {
+    dispatch({ type: 'ADD_SUBJECT', payload: { ...subject, id: crypto.randomUUID(), createdAt: new Date().toISOString() } });
+  }, []);
+
+  const updateSubject = useCallback((id, updates) => {
+    dispatch({ type: 'UPDATE_SUBJECT', payload: { id, updates } });
+  }, []);
+
+  const deleteSubject = useCallback((id) => {
+    dispatch({ type: 'DELETE_SUBJECT', payload: id });
+  }, []);
+
   const value = {
     ...state,
     addTask,
     updateTask,
     deleteTask,
     addTimeLog,
+    addSubject,
+    updateSubject,
+    deleteSubject,
     getSubjectById,
     getTasksForDate
   };
