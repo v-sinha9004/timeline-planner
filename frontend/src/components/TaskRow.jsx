@@ -10,6 +10,7 @@ export default function TaskRow({ task, subject }) {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
+  const [editPriority, setEditPriority] = useState(task.priority);
   const inputRef = useRef(null);
 
   const isCompleted = task.status === 'COMPLETED';
@@ -25,20 +26,32 @@ export default function TaskRow({ task, subject }) {
   };
 
   const handleSave = () => {
+    const updates = {};
     if (editTitle.trim() && editTitle !== task.title) {
-      updateTask(task.id, { title: editTitle.trim() });
+      updates.title = editTitle.trim();
+    }
+    if (editPriority !== task.priority) {
+      updates.priority = editPriority;
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      updateTask(task.id, updates);
     } else {
       setEditTitle(task.title);
+      setEditPriority(task.priority);
     }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditTitle(task.title);
+    setEditPriority(task.priority);
     setIsEditing(false);
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSave();
-    if (e.key === 'Escape') {
-      setEditTitle(task.title);
-      setIsEditing(false);
-    }
+    if (e.key === 'Escape') handleCancel();
   };
 
   const getPriorityColor = () => {
@@ -73,7 +86,6 @@ export default function TaskRow({ task, subject }) {
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               onKeyDown={handleKeyDown}
-              onBlur={handleSave}
               style={{ padding: '4px 8px', width: '100%' }}
             />
           </div>
@@ -94,10 +106,22 @@ export default function TaskRow({ task, subject }) {
         {task.startDate ? `${format(new Date(task.startDate), 'MMM d, yyyy')} - ${task.endDate ? format(new Date(task.endDate), 'MMM d, yyyy') : '?'}` : '--'}
       </td>
       <td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: getPriorityColor() }} />
-          {task.priority}
-        </div>
+        {isEditing ? (
+          <select 
+            value={editPriority} 
+            onChange={(e) => setEditPriority(e.target.value)}
+            style={{ fontSize: '12px', padding: '4px 8px', height: 'auto', width: '100%' }}
+          >
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HIGH">HIGH</option>
+          </select>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: getPriorityColor() }} />
+            {task.priority}
+          </div>
+        )}
       </td>
       <td>
         <select 
@@ -112,9 +136,20 @@ export default function TaskRow({ task, subject }) {
       </td>
       <td style={{ width: '120px' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
-          <button className="btn-icon" title="Edit" onClick={() => setIsEditing(true)}>
-            <Edit2 size={16} />
-          </button>
+          {isEditing ? (
+            <>
+              <button className="btn-icon" title="Save" onClick={handleSave}>
+                <Check size={16} />
+              </button>
+              <button className="btn-icon" title="Cancel" onClick={handleCancel}>
+                <X size={16} />
+              </button>
+            </>
+          ) : (
+            <button className="btn-icon" title="Edit" onClick={() => setIsEditing(true)}>
+              <Edit2 size={16} />
+            </button>
+          )}
           <button className="btn-icon" title="Delete" onClick={() => deleteTask(task.id)}>
             <Trash2 size={16} />
           </button>

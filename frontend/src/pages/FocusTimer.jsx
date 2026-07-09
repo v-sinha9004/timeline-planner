@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import SubjectBadge from '../components/SubjectBadge';
 import TimerDisplay from '../components/TimerDisplay';
-import { Play, Pause, Square, RotateCcw, Timer } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, Timer, Coffee } from 'lucide-react';
 import { format } from 'date-fns';
+import TimerDevTools from '../components/TimerDevTools';
 
 export default function FocusTimer() {
-  const { getTasksForDate, getSubjectById, addTimeLog } = useData();
+  const { getTasksForDate, getSubjectById, addTimeLog, timeLogs } = useData();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const tasks = getTasksForDate(todayStr).filter(t => t.status !== 'COMPLETED');
 
@@ -16,6 +17,7 @@ export default function FocusTimer() {
   const [isRunning, setIsRunning] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [isBreakMode, setIsBreakMode] = useState(false);
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
   const selectedSubject = selectedTask ? getSubjectById(selectedTask.subjectId) : null;
@@ -29,7 +31,7 @@ export default function FocusTimer() {
   };
 
   const startTimer = () => {
-    if (!selectedTaskId) {
+    if (!isBreakMode && !selectedTaskId) {
       alert("Please select a task first!");
       return;
     }
@@ -43,7 +45,8 @@ export default function FocusTimer() {
         if (prev <= 1) {
           clearInterval(id);
           setIsRunning(false);
-          handleSessionComplete();
+          // Pass 0 to avoid stale closure state
+          handleSessionComplete(0);
           return 0;
         }
         return prev - 1;
@@ -60,8 +63,15 @@ export default function FocusTimer() {
   const stopTimer = () => {
     pauseTimer();
     if (sessionStartTime) {
-      handleSessionComplete();
+      handleSessionComplete(timeRemaining);
     }
+  };
+
+  const forceCompleteTimer = () => {
+    if (intervalId) clearInterval(intervalId);
+    setIsRunning(false);
+    handleSessionComplete(0);
+    setTimeRemaining(0);
   };
 
   const resetTimer = () => {
@@ -70,53 +80,102 @@ export default function FocusTimer() {
     setSessionStartTime(null);
   };
 
-  const handleSessionComplete = () => {
-    const duration = totalTime - timeRemaining;
-    if (duration > 0 && selectedTaskId) {
+  const handleSessionComplete = (finalTimeRemaining = timeRemaining) => {
+    const duration = totalTime - finalTimeRemaining;
+    if (duration > 0 && (selectedTaskId || isBreakMode)) {
       addTimeLog({
-        taskId: selectedTaskId,
-        startedAt: sessionStartTime.toISOString(),
+        taskId: isBreakMode ? 'break' : selectedTaskId,
+        startedAt: sessionStartTime ? sessionStartTime.toISOString() : new Date().toISOString(),
         endedAt: new Date().toISOString(),
         duration,
-        date: todayStr
+        date: todayStr,
+        isBreak: isBreakMode
       });
     }
     setSessionStartTime(null);
   };
 
+  const todaysLogs = (timeLogs || []).filter(log => log.date === todayStr);
+  let totalWorkTime = 0;
+  let totalBreakTime = 0;
+  
+  todaysLogs.forEach(log => {
+    if (log.isBreak || log.taskId === 'break') {
+      totalBreakTime += log.duration;
+    } else {
+      totalWorkTime += log.duration;
+    }
+  });
+
+  const formatSummaryTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  };
+
   return (
     <div className="flex gap-lg">
-      <div className="timer-container" style={{ flex: 2 }}>
-        <h2 style={{ marginBottom: '24px' }}>Focus Session</h2>
-        
-        <select 
-          value={selectedTaskId} 
-          onChange={(e) => setSelectedTaskId(e.target.value)}
-          style={{ width: '100%', maxWidth: '300px', marginBottom: '16px' }}
-        >
-          <option value="">-- Select a Task --</option>
-          {tasks.map(t => (
-            <option key={t.id} value={t.id}>{t.title}</option>
-          ))}
-        </select>
-
-        {selectedSubject && (
-          <div style={{ marginBottom: '16px' }}>
-            <SubjectBadge subject={selectedSubject} />
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(25)}>25m</button>
-          <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(45)}>45m</button>
-          <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(60)}>60m</button>
+      <div className="timer-container" style={{ flex: 2, position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '24px' }}>
+          <h2>{isBreakMode ? 'Break Time' : 'Focus Session'}</h2>
+          <button 
+            className="btn btn-icon" 
+            title={isBreakMode ? "Switch to Focus" : "Take a Break"}
+            onClick={() => {
+              setIsBreakMode(!isBreakMode);
+              setPreset(!isBreakMode ? 5 : 25);
+            }}
+            style={{ color: isBreakMode ? 'var(--subject-geography)' : 'inherit' }}
+          >
+            <Coffee size={20} />
+          </button>
         </div>
+        
+        {!isBreakMode ? (
+          <>
+            <select 
+              value={selectedTaskId} 
+              onChange={(e) => setSelectedTaskId(e.target.value)}
+              style={{ width: '100%', maxWidth: '300px', marginBottom: '16px' }}
+            >
+              <option value="">-- Select a Task --</option>
+              {tasks.map(t => (
+                <option key={t.id} value={t.id}>{t.title}</option>
+              ))}
+            </select>
+
+            {selectedSubject && (
+              <div style={{ marginBottom: '16px' }}>
+                <SubjectBadge subject={selectedSubject} />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(25)}>25m</button>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(45)}>45m</button>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(60)}>60m</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
+              Time to recharge your mind!
+            </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(5)}>5m</button>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(10)}>10m</button>
+              <button className="btn" style={{ backgroundColor: 'var(--bg-tertiary)' }} onClick={() => setPreset(15)}>15m</button>
+            </div>
+          </>
+        )}
 
         <TimerDisplay 
           timeRemaining={timeRemaining} 
           totalTime={totalTime} 
           isRunning={isRunning} 
-          label={selectedTask?.title || "Ready to focus"}
+          label={isBreakMode ? "Break" : (selectedTask?.title || "Ready to focus")}
+          color={isBreakMode ? "var(--subject-geography)" : "var(--accent)"}
         />
 
         <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
@@ -142,11 +201,41 @@ export default function FocusTimer() {
         <h3>Daily Summary</h3>
         <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '24px' }}>Time logged today</p>
         
-        {/* Placeholder for time summary until we implement the selector properly */}
-        <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)' }}>
-          <Timer size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-          Complete a session to see your stats!
-        </div>
+        {todaysLogs.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-tertiary)', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)' }}>
+            <Timer size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
+            Complete a session to see your stats!
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Timer size={18} color="var(--accent)" />
+                <span style={{ fontWeight: 500 }}>Focus Time</span>
+              </div>
+              <span style={{ fontWeight: 600 }}>{formatSummaryTime(totalWorkTime)}</span>
+            </div>
+            
+            <div style={{ padding: '16px', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Coffee size={18} color="var(--subject-geography)" />
+                <span style={{ fontWeight: 500 }}>Break Time</span>
+              </div>
+              <span style={{ fontWeight: 600 }}>{formatSummaryTime(totalBreakTime)}</span>
+            </div>
+
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+              <span>Total Logged</span>
+              <span>{formatSummaryTime(totalWorkTime + totalBreakTime)}</span>
+            </div>
+          </div>
+        )}
+        
+        <TimerDevTools 
+          forceCompleteTimer={forceCompleteTimer}
+          isBreakMode={isBreakMode}
+          selectedTaskId={selectedTaskId}
+        />
       </div>
     </div>
   );

@@ -71,8 +71,9 @@ model Recurrence {
 
 model TimeLog {
   id        String   @id @default(uuid())
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  isBreak   Boolean  @default(false)
   startedAt DateTime
   endedAt   DateTime?
   duration  Int      @default(0)

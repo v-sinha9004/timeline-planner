@@ -379,14 +379,15 @@ input:focus, select:focus, textarea:focus {
   box-shadow: none;
 }
 
-/* Weekly Grid */
-.weekly-grid {
+/* Weekly Grid New */
+.weekly-grid-new {
   display: grid;
-  grid-template-columns: 60px repeat(7, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background-color: var(--bg-primary);
   overflow: hidden;
+  min-height: 500px;
 }
 .weekly-header {
   border-bottom: 1px solid var(--border);
@@ -394,48 +395,10 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   font-weight: 500;
   background-color: var(--bg-secondary);
-  border-left: 1px solid var(--border);
 }
-.time-col {
-  border-right: 1px solid var(--border);
-}
-.time-label {
-  height: 48px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  text-align: right;
-  padding-right: 8px;
-  transform: translateY(-8px);
-}
-.day-col {
-  border-right: 1px solid var(--border);
+.day-col-new {
   position: relative;
-  min-height: calc(18 * 48px);
-}
-.day-col:last-child {
-  border-right: none;
-}
-.grid-line {
-  height: 48px;
-  border-bottom: 1px dashed var(--border);
-}
-.time-block {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  color: white;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform var(--transition);
-}
-.time-block:hover {
-  transform: scale(1.02);
-  z-index: 10;
-  box-shadow: var(--shadow-md);
+  min-height: 400px;
 }
 
 /* Monthly Grid */

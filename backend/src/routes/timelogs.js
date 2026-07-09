@@ -73,10 +73,11 @@ router.get('/summary', async (req, res) => {
 // POST /api/timelogs — create time log
 router.post('/', async (req, res) => {
   try {
-    const { taskId, startedAt, date, endedAt, duration } = req.body;
+    const { taskId, isBreak, startedAt, date, endedAt, duration } = req.body;
     const timeLog = await prisma.timeLog.create({
       data: {
-        taskId,
+        taskId: taskId === 'break' ? null : taskId,
+        isBreak: isBreak || taskId === 'break' || false,
         startedAt: new Date(startedAt),
         endedAt: endedAt ? new Date(endedAt) : null,
         duration: duration ?? 0,

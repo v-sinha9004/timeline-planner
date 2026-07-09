@@ -103,7 +103,13 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
                 <input 
                   type="date" 
                   value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
+                  onChange={e => {
+                    const newStartDate = e.target.value;
+                    setStartDate(newStartDate);
+                    if (endDate && newStartDate > endDate) {
+                      setEndDate(newStartDate);
+                    }
+                  }}
                 />
               </div>
 
@@ -112,6 +118,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
                 <input 
                   type="date" 
                   value={endDate}
+                  min={startDate}
                   onChange={e => setEndDate(e.target.value)}
                 />
               </div>

@@ -152,7 +152,8 @@ router.post('/', async (req, res) => {
         await tx.timeLog.upsert({
           where: { id: log.id },
           update: {
-            taskId: logData.taskId,
+            taskId: logData.taskId === 'break' ? null : logData.taskId,
+            isBreak: logData.isBreak || logData.taskId === 'break' || false,
             startedAt: new Date(logData.startedAt),
             endedAt: logData.endedAt ? new Date(logData.endedAt) : null,
             duration: logData.duration ?? 0,
@@ -160,7 +161,8 @@ router.post('/', async (req, res) => {
           },
           create: {
             id: log.id,
-            taskId: logData.taskId,
+            taskId: logData.taskId === 'break' ? null : logData.taskId,
+            isBreak: logData.isBreak || logData.taskId === 'break' || false,
             startedAt: new Date(logData.startedAt),
             endedAt: logData.endedAt ? new Date(logData.endedAt) : null,
             duration: logData.duration ?? 0,
@@ -168,6 +170,9 @@ router.post('/', async (req, res) => {
           },
         });
       }
+    }, {
+      maxWait: 10000,
+      timeout: 30000
     });
 
     res.json({ message: 'Sync completed successfully' });

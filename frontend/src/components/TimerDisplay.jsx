@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export default function TimerDisplay({ timeRemaining, totalTime, isRunning, label }) {
+export default function TimerDisplay({ timeRemaining, totalTime, isRunning, label, color = "var(--accent)" }) {
   const [offset, setOffset] = useState(0);
   const size = 240;
   const strokeWidth = 8;
@@ -32,7 +32,7 @@ export default function TimerDisplay({ timeRemaining, totalTime, isRunning, labe
           cy={center}
         />
         <circle
-          stroke="var(--accent)"
+          stroke={color}
           fill="transparent"
           strokeWidth={strokeWidth}
           strokeLinecap="round"

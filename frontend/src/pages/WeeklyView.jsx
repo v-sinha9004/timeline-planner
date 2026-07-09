@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { useData } from '../contexts/DataContext';
 
 export default function WeeklyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { getTasksForDate, getSubjectById } = useData();
   
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
   const days = Array.from({ length: 7 }).map((_, i) => addDays(startDate, i));
-  const hours = Array.from({ length: 18 }).map((_, i) => i + 6); // 6am to 11pm
 
   const prevWeek = () => setCurrentDate(addDays(currentDate, -7));
   const nextWeek = () => setCurrentDate(addDays(currentDate, 7));
@@ -26,14 +27,11 @@ export default function WeeklyView() {
         </h3>
       </div>
 
-      <div className="weekly-grid">
-        <div className="weekly-header" style={{ borderRight: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>GMT+5:30</span>
-        </div>
+      <div className="weekly-grid-new">
         {days.map((day, i) => {
           const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
           return (
-            <div key={i} className="weekly-header" style={{ backgroundColor: isToday ? 'var(--accent-softer)' : '' }}>
+            <div key={i} className="weekly-header" style={{ backgroundColor: isToday ? 'var(--accent-softer)' : '', borderRight: i < 6 ? '1px solid var(--border)' : 'none' }}>
               <div style={{ fontSize: '12px', color: isToday ? 'var(--accent)' : 'var(--text-secondary)' }}>
                 {format(day, 'EEE')}
               </div>
@@ -48,28 +46,50 @@ export default function WeeklyView() {
           );
         })}
 
-        {/* Time labels column */}
-        <div className="time-col">
-          {hours.map(hour => (
-            <div key={hour} className="time-label">
-              {hour}:00
-            </div>
-          ))}
-        </div>
-
         {/* Days columns */}
-        {days.map((day, i) => (
-          <div key={i} className="day-col">
-            {hours.map(hour => (
-              <div key={hour} className="grid-line" />
-            ))}
-            
-            {/* We will render TimeBlocks here in a future iteration based on getTasksForDate */}
-            <div style={{ padding: '8px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px', opacity: 0.5 }}>
-              (Time blocks feature coming soon)
+        {days.map((day, i) => {
+          const dayTasks = getTasksForDate(format(day, 'yyyy-MM-dd'));
+          const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+
+          return (
+            <div 
+              key={i} 
+              className="day-col-new" 
+              style={{ 
+                borderRight: i < 6 ? '1px solid var(--border)' : 'none',
+                backgroundColor: isToday ? 'var(--bg-secondary)' : 'transparent'
+              }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px' }}>
+                {dayTasks.map(task => {
+                  const subject = getSubjectById(task.subjectId);
+                  return (
+                    <div 
+                      key={task.id} 
+                      style={{ 
+                        backgroundColor: subject ? subject.color : 'var(--text-tertiary)',
+                        color: 'white',
+                        padding: '6px 10px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        boxShadow: 'var(--shadow-sm)',
+                        wordBreak: 'break-word'
+                      }}
+                    >
+                      {task.title}
+                    </div>
+                  );
+                })}
+                {dayTasks.length === 0 && (
+                  <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '12px', padding: '20px 0' }}>
+                    No tasks
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

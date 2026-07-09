@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 
 const DataContext = createContext();
 
@@ -55,7 +55,9 @@ function dataReducer(state, action) {
 export function DataProvider({ children }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  // Load from localStorage on mount
+  const isFirstRender = useRef(true);
+
+  // Load from localStorage on mount, then fetch fresh from DB
   useEffect(() => {
     const saved = localStorage.getItem('upsc-planner-data');
     if (saved) {
@@ -63,11 +65,43 @@ export function DataProvider({ children }) {
     } else {
       dispatch({ type: 'SET_STATE', payload: { subjects: DEFAULT_SUBJECTS } });
     }
-    // Note: Lazy Supabase sync to be implemented here
+    
+    // Lazy sync from Supabase
+    fetch('/api/sync')
+      .then(res => res.json())
+      .then(data => {
+        if (data && (data.subjects?.length > 0 || data.tasks?.length > 0)) {
+          // Normalize dates from backend (ISO strings) to local yyyy-MM-dd
+          if (data.tasks) {
+            data.tasks = data.tasks.map(t => ({
+              ...t,
+              date: t.date ? t.date.substring(0, 10) : null,
+              startDate: t.startDate ? t.startDate.substring(0, 10) : null,
+              endDate: t.endDate ? t.endDate.substring(0, 10) : null,
+            }));
+          }
+          if (data.timeLogs) {
+            data.timeLogs = data.timeLogs.map(log => ({
+              ...log,
+              date: log.date ? log.date.substring(0, 10) : null,
+            }));
+          }
+          dispatch({ type: 'SET_STATE', payload: data });
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch from DB on load:', err);
+        dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
+      });
   }, []);
 
-  // Save to localStorage on state change (debounce for sync)
+  // Save to localStorage and debounce POST to DB
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     if (state.subjects.length > 0 || state.tasks.length > 0) {
       const stateToSave = {
         subjects: state.subjects,
@@ -76,11 +110,23 @@ export function DataProvider({ children }) {
       };
       localStorage.setItem('upsc-planner-data', JSON.stringify(stateToSave));
       
-      // Simulate debounced sync
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       const timer = setTimeout(() => {
-        dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
-      }, 1000);
+        fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(stateToSave)
+        })
+        .then(res => {
+          if (!res.ok) throw new Error('Sync failed');
+          dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+        })
+        .catch(err => {
+          console.error('Sync POST failed:', err);
+          dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+        });
+      }, 500); // 500ms debounce
+      
       return () => clearTimeout(timer);
     }
   }, [state.subjects, state.tasks, state.timeLogs]);
