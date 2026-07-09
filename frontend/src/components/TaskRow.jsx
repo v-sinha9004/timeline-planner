@@ -3,6 +3,7 @@ import { Edit2, Trash2, Timer, Check, X } from 'lucide-react';
 import SubjectBadge from './SubjectBadge';
 import { useData } from '../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 
 export default function TaskRow({ task, subject }) {
   const { updateTask, deleteTask } = useData();
@@ -90,7 +91,7 @@ export default function TaskRow({ task, subject }) {
         <SubjectBadge subject={subject} />
       </td>
       <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
-        {task.startTime ? `${task.startTime} - ${task.endTime || '?'}` : '--:--'}
+        {task.startDate ? `${format(new Date(task.startDate), 'MMM d, yyyy')} - ${task.endDate ? format(new Date(task.endDate), 'MMM d, yyyy') : '?'}` : '--'}
       </td>
       <td>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>

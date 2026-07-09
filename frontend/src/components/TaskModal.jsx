@@ -9,9 +9,8 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
 
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState('');
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
+  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [priority, setPriority] = useState('MEDIUM');
 
   useEffect(() => {
@@ -19,16 +18,14 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
       if (taskToEdit) {
         setTitle(taskToEdit.title || '');
         setSubjectId(taskToEdit.subjectId || '');
-        setDate(taskToEdit.date || format(new Date(), 'yyyy-MM-dd'));
-        setStartTime(taskToEdit.startTime || '');
-        setEndTime(taskToEdit.endTime || '');
+        setStartDate(taskToEdit.startDate || format(new Date(), 'yyyy-MM-dd'));
+        setEndDate(taskToEdit.endDate || format(new Date(), 'yyyy-MM-dd'));
         setPriority(taskToEdit.priority || 'MEDIUM');
       } else {
         setTitle('');
         setSubjectId('');
-        setDate(format(new Date(), 'yyyy-MM-dd'));
-        setStartTime('');
-        setEndTime('');
+        setStartDate(format(new Date(), 'yyyy-MM-dd'));
+        setEndDate(format(new Date(), 'yyyy-MM-dd'));
         setPriority('MEDIUM');
       }
     }
@@ -46,9 +43,8 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
     const taskData = {
       title: title.trim(),
       subjectId,
-      date,
-      startTime: startTime || null,
-      endTime: endTime || null,
+      startDate,
+      endDate,
       priority,
       status: taskToEdit ? taskToEdit.status : 'PENDING'
     };
@@ -99,33 +95,24 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
                   ))}
                 </select>
               </div>
-
-              <div className="flex-col gap-sm" style={{ flex: 1 }}>
-                <label style={{ fontWeight: 500 }}>Date</label>
-                <input 
-                  type="date" 
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                />
-              </div>
             </div>
 
             <div className="flex gap-md">
               <div className="flex-col gap-sm" style={{ flex: 1 }}>
-                <label style={{ fontWeight: 500 }}>Start Time</label>
+                <label style={{ fontWeight: 500 }}>Start Date</label>
                 <input 
-                  type="time" 
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
+                  type="date" 
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
                 />
               </div>
 
               <div className="flex-col gap-sm" style={{ flex: 1 }}>
-                <label style={{ fontWeight: 500 }}>End Time</label>
+                <label style={{ fontWeight: 500 }}>End Date</label>
                 <input 
-                  type="time" 
-                  value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
+                  type="date" 
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
                 />
               </div>
             </div>

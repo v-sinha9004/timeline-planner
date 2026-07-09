@@ -14,7 +14,8 @@ export default function QuickAdd() {
     addTask({
       title: title.trim(),
       subjectId,
-      date: format(new Date(), 'yyyy-MM-dd'),
+      startDate: format(new Date(), 'yyyy-MM-dd'),
+      endDate: format(new Date(), 'yyyy-MM-dd'),
       priority: 'MEDIUM',
       status: 'PENDING'
     });

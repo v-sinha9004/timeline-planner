@@ -108,8 +108,15 @@ export function DataProvider({ children }) {
   }, [state.subjects]);
 
   const getTasksForDate = useCallback((dateStr) => {
-    // simplified for now: exact match on date string (YYYY-MM-DD)
-    return state.tasks.filter(t => t.date === dateStr);
+    return state.tasks.filter(t => {
+      const taskStart = t.startDate || t.date;
+      const taskEnd = t.endDate || t.date;
+      if (!taskStart && !taskEnd) return false;
+      if (taskStart && taskEnd) return dateStr >= taskStart && dateStr <= taskEnd;
+      if (taskStart) return dateStr >= taskStart;
+      if (taskEnd) return dateStr <= taskEnd;
+      return false;
+    });
   }, [state.tasks]);
 
   const value = {

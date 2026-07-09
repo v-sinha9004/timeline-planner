@@ -40,7 +40,7 @@ export default function TodayView() {
                 <th style={{ width: '40px' }}></th>
                 <th>Task</th>
                 <th>Subject</th>
-                <th>Time</th>
+                <th>Dates</th>
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Actions</th>
