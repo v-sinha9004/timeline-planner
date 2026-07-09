@@ -3,7 +3,7 @@ import { useUser } from './UserContext';
 
 const DataContext = createContext();
 
-const API_BASE = 'http://localhost:5002';
+const API_BASE = 'https://timeline-planner-gamma.vercel.app';
 
 const DEFAULT_SUBJECTS = [
   { id: 'subj-history-001', name: 'Indian History', color: '#f59e0b', icon: '📜', order: 0, subtopics: [] },
