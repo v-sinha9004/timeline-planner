@@ -4,7 +4,7 @@ import SubjectBadge from './SubjectBadge';
 import { useData } from '../contexts/DataContext';
 import { format } from 'date-fns';
 
-export default function TaskRow({ task, subject }) {
+export default function TaskRow({ task, subject, dateStr, hideStatus = false }) {
   const { updateTask, deleteTask } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
@@ -13,7 +13,9 @@ export default function TaskRow({ task, subject }) {
   const [editEndDate, setEditEndDate] = useState(task.endDate || '');
   const inputRef = useRef(null);
 
-  const isCompleted = task.status === 'COMPLETED';
+  const isCompleted = dateStr 
+    ? (task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr))
+    : task.status === 'COMPLETED';
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -22,7 +24,20 @@ export default function TaskRow({ task, subject }) {
   }, [isEditing]);
 
   const toggleComplete = () => {
-    updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+    if (dateStr) {
+      let newCompletedDates = [...(task.completedDates || [])];
+      if (isCompleted) {
+        newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
+        const updates = { completedDates: newCompletedDates };
+        if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+        updateTask(task.id, updates);
+      } else {
+        newCompletedDates.push(dateStr);
+        updateTask(task.id, { completedDates: newCompletedDates });
+      }
+    } else {
+      updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+    }
   };
 
   const handleSave = () => {
@@ -157,17 +172,19 @@ export default function TaskRow({ task, subject }) {
           </div>
         )}
       </td>
-      <td>
-        <select 
-          value={task.status} 
-          onChange={(e) => updateTask(task.id, { status: e.target.value })}
-          style={{ fontSize: '12px', padding: '4px 8px', height: 'auto' }}
-        >
-          <option value="PENDING">Pending</option>
-          <option value="IN_PROGRESS">In Progress</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
-      </td>
+      {!hideStatus && (
+        <td>
+          <select 
+            value={task.status} 
+            onChange={(e) => updateTask(task.id, { status: e.target.value })}
+            style={{ fontSize: '12px', padding: '4px 8px', height: 'auto' }}
+          >
+            <option value="PENDING">Pending</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="COMPLETED">Completed</option>
+          </select>
+        </td>
+      )}
       <td style={{ width: '120px' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {isEditing ? (

@@ -72,7 +72,7 @@ export default function QuickAdd() {
           })()}
         </div>
       )}
-      <button type="submit" className="btn btn-primary" style={{ padding: '6px 12px' }}>Add</button>
+      <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px', border: '1px solid transparent' }}>Add</button>
     </form>
   );
 }

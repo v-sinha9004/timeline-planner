@@ -42,7 +42,8 @@ export default function MonthlyView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {dayTasks.slice(0, 3).map(task => {
               const subject = getSubjectById(task.subjectId);
-              const isCompleted = task.status === 'COMPLETED';
+              const dateStr = format(day, 'yyyy-MM-dd');
+              const isCompleted = task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr);
 
               return (
                 <div 
@@ -61,7 +62,16 @@ export default function MonthlyView() {
                     className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                      let newCompletedDates = [...(task.completedDates || [])];
+                      if (isCompleted) {
+                         newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
+                         const updates = { completedDates: newCompletedDates };
+                         if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+                         updateTask(task.id, updates);
+                      } else {
+                         newCompletedDates.push(dateStr);
+                         updateTask(task.id, { completedDates: newCompletedDates });
+                      }
                     }}
                     style={{ 
                       width: '14px', 
@@ -143,7 +153,8 @@ export default function MonthlyView() {
                 }
                 return dayTasks.map(task => {
                   const subject = getSubjectById(task.subjectId);
-                  const isCompleted = task.status === 'COMPLETED';
+                  const dateStr = format(selectedDay, 'yyyy-MM-dd');
+                  const isCompleted = task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr);
 
                   return (
                     <div 
@@ -164,7 +175,16 @@ export default function MonthlyView() {
                         className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                          let newCompletedDates = [...(task.completedDates || [])];
+                          if (isCompleted) {
+                             newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
+                             const updates = { completedDates: newCompletedDates };
+                             if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+                             updateTask(task.id, updates);
+                          } else {
+                             newCompletedDates.push(dateStr);
+                             updateTask(task.id, { completedDates: newCompletedDates });
+                          }
                         }}
                         style={{ 
                           width: '18px', 

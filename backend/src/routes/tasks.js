@@ -70,6 +70,9 @@ router.post('/', async (req, res) => {
   try {
     const { recurrence, date, startDate, endDate, ...taskData } = req.body;
 
+    if (taskData.subjectId === '') taskData.subjectId = null;
+    if (taskData.subtopicId === '') taskData.subtopicId = null;
+
     const task = await prisma.task.create({
       data: {
         ...taskData,
@@ -107,6 +110,9 @@ router.put('/:id', async (req, res) => {
     delete taskData.subject;
     delete taskData.subtopic;
     delete taskData.timeLogs;
+
+    if (taskData.subjectId === '') taskData.subjectId = null;
+    if (taskData.subtopicId === '') taskData.subtopicId = null;
 
     if (date !== undefined) taskData.date = date ? new Date(date) : null;
     if (startDate !== undefined) taskData.startDate = startDate ? new Date(startDate) : null;

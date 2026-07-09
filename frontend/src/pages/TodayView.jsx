@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import TaskRow from '../components/TaskRow';
 import QuickAdd from '../components/QuickAdd';
@@ -11,9 +12,17 @@ export default function TodayView() {
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const tasks = getTasksForDate(todayStr);
 
-  const completedCount = tasks.filter(t => t.status === 'COMPLETED').length;
+  const [sortByPriority, setSortByPriority] = useState(false);
+
+  const completedCount = tasks.filter(t => t.status === 'COMPLETED' || (t.completedDates || []).includes(todayStr)).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
   const allDone = tasks.length > 0 && completedCount === tasks.length;
+
+  let displayTasks = [...tasks];
+  if (sortByPriority) {
+    const priorityWeight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+    displayTasks.sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]);
+  }
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -32,8 +41,29 @@ export default function TodayView() {
         <ProgressRing progress={progress} size={80} />
       </div>
 
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+        <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>Sort By:</span>
+        <button 
+          onClick={() => setSortByPriority(!sortByPriority)}
+          style={{ 
+            backgroundColor: sortByPriority ? '#fce7f3' : 'var(--bg-secondary)', 
+            color: sortByPriority ? '#db2777' : 'var(--text-secondary)',
+            border: `1px solid ${sortByPriority ? '#fbcfe8' : 'var(--border)'}`,
+            padding: '6px 16px',
+            borderRadius: '20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: sortByPriority ? '0 2px 4px rgba(219, 39, 119, 0.1)' : 'none'
+          }}
+        >
+          Priority
+        </button>
+      </div>
+
       <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--border)' }}>
-        {tasks.length > 0 ? (
+        {displayTasks.length > 0 ? (
           <table className="task-table">
             <thead>
               <tr>
@@ -43,16 +73,17 @@ export default function TodayView() {
                 <th>Start Date</th>
                 <th>End Date</th>
                 <th>Priority</th>
-                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tasks.map(task => (
+              {displayTasks.map(task => (
                 <TaskRow 
                   key={task.id} 
                   task={task} 
-                  subject={getSubjectById(task.subjectId)} 
+                  subject={getSubjectById(task.subjectId)}
+                  dateStr={todayStr}
+                  hideStatus={true}
                 />
               ))}
             </tbody>

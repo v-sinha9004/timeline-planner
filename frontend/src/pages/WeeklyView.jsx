@@ -63,7 +63,8 @@ export default function WeeklyView() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px' }}>
                 {dayTasks.map(task => {
                   const subject = getSubjectById(task.subjectId);
-                  const isCompleted = task.status === 'COMPLETED';
+                  const dateStr = format(day, 'yyyy-MM-dd');
+                  const isCompleted = task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr);
 
                   return (
                     <div 
@@ -87,7 +88,16 @@ export default function WeeklyView() {
                         className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+                          let newCompletedDates = [...(task.completedDates || [])];
+                          if (isCompleted) {
+                             newCompletedDates = newCompletedDates.filter(d => d !== dateStr);
+                             const updates = { completedDates: newCompletedDates };
+                             if (task.status === 'COMPLETED') updates.status = 'IN_PROGRESS';
+                             updateTask(task.id, updates);
+                          } else {
+                             newCompletedDates.push(dateStr);
+                             updateTask(task.id, { completedDates: newCompletedDates });
+                          }
                         }}
                         style={{ 
                           marginTop: '2px', 
