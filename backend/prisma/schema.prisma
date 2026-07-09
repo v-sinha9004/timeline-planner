@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Subject {
+  id        String     @id @default(uuid())
+  name      String
+  color     String
+  icon      String
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  subtopics Subtopic[]
+  tasks     Task[]
+}
+
+model Subtopic {
+  id             String   @id @default(uuid())
+  name           String
+  subjectId      String
+  subject        Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  startDate      DateTime?
+  endDate        DateTime?
+  estimatedHours Float?
+  notes          String?
+  completed      Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tasks          Task[]
+}
+
+model Task {
+  id           String      @id @default(uuid())
+  title        String
+  subjectId    String?
+  subject      Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subtopicId   String?
+  subtopic     Subtopic?   @relation(fields: [subtopicId], references: [id], onDelete: SetNull)
+  date         DateTime?
+  startDate    DateTime?
+  endDate      DateTime?
+  startTime    String?
+  endTime      String?
+  priority     Priority    @default(MEDIUM)
+  status       TaskStatus  @default(PENDING)
+  isTest       Boolean     @default(false)
+  tags         String[]
+  order        Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  recurrence   Recurrence?
+  timeLogs     TimeLog[]
+}
+
+model Recurrence {
+  id          String         @id @default(uuid())
+  taskId      String         @unique
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  type        RecurrenceType
+  interval    Int            @default(1)
+  daysOfWeek  Int[]
+  createdAt   DateTime       @default(now())
+}
+
+model TimeLog {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  startedAt DateTime
+  endedAt   DateTime?
+  duration  Int      @default(0)
+  date      DateTime
+  createdAt DateTime @default(now())
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum RecurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
