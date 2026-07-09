@@ -9,10 +9,6 @@ export default function SubjectModal({ isOpen, onClose, subjectToEdit = null }) 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('📚');
   const [color, setColor] = useState('#3b82f6');
-  const [subtopics, setSubtopics] = useState([]);
-  const [newSubtopic, setNewSubtopic] = useState('');
-
-  const newSubtopicInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -20,14 +16,11 @@ export default function SubjectModal({ isOpen, onClose, subjectToEdit = null }) 
         setName(subjectToEdit.name || '');
         setIcon(subjectToEdit.icon || '📚');
         setColor(subjectToEdit.color || '#3b82f6');
-        setSubtopics(subjectToEdit.subtopics || []);
       } else {
         setName('');
         setIcon('📚');
         setColor('#3b82f6');
-        setSubtopics([]);
       }
-      setNewSubtopic('');
     }
   }, [isOpen, subjectToEdit]);
 
@@ -43,8 +36,7 @@ export default function SubjectModal({ isOpen, onClose, subjectToEdit = null }) 
     const subjectData = {
       name: name.trim(),
       icon,
-      color,
-      subtopics
+      color
     };
 
     if (subjectToEdit) {
@@ -54,29 +46,6 @@ export default function SubjectModal({ isOpen, onClose, subjectToEdit = null }) 
     }
     
     onClose();
-  };
-
-  const handleAddSubtopic = () => {
-    if (newSubtopic.trim()) {
-      setSubtopics([
-        ...subtopics, 
-        { id: crypto.randomUUID(), name: newSubtopic.trim(), completed: false }
-      ]);
-      setNewSubtopic('');
-      if (newSubtopicInputRef.current) {
-        newSubtopicInputRef.current.focus();
-      }
-    }
-  };
-
-  const toggleSubtopic = (id) => {
-    setSubtopics(subtopics.map(st => 
-      st.id === id ? { ...st, completed: !st.completed } : st
-    ));
-  };
-
-  const deleteSubtopic = (id) => {
-    setSubtopics(subtopics.filter(st => st.id !== id));
   };
 
   const handleDeleteSubject = () => {
@@ -147,63 +116,7 @@ export default function SubjectModal({ isOpen, onClose, subjectToEdit = null }) 
               </div>
             </div>
 
-            <hr style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-
-            <div className="flex-col gap-sm">
-              <label style={{ fontWeight: 500, display: 'flex', justifyContent: 'space-between' }}>
-                <span>Sub-topics</span>
-                <span style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 400 }}>
-                  {subtopics.filter(s => s.completed).length} / {subtopics.length} completed
-                </span>
-              </label>
-              
-              <div className="subtopics-list">
-                {subtopics.map(st => (
-                  <div key={st.id} className={`subtopic-item ${st.completed ? 'completed' : ''}`}>
-                    <div 
-                      className={`custom-checkbox ${st.completed ? 'checked' : ''}`}
-                      onClick={() => toggleSubtopic(st.id)}
-                    >
-                      {st.completed && <Check size={14} />}
-                    </div>
-                    <span className="subtopic-title" style={{ flex: 1, textDecoration: st.completed ? 'line-through' : 'none', color: st.completed ? 'var(--text-secondary)' : 'inherit' }}>
-                      {st.name}
-                    </span>
-                    <button type="button" className="btn-icon" onClick={() => deleteSubtopic(st.id)}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-                
-                <div className="subtopic-add-row" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                  <input 
-                    ref={newSubtopicInputRef}
-                    type="text" 
-                    value={newSubtopic}
-                    onChange={e => setNewSubtopic(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddSubtopic();
-                      }
-                    }}
-                    placeholder="Add a new sub-topic..."
-                    style={{ flex: 1, padding: '6px 12px', fontSize: '14px' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
-                    onClick={handleAddSubtopic}
-                    disabled={!newSubtopic.trim()}
-                    style={{ padding: '6px 12px' }}
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              </div>
             </div>
-
-          </div>
           
           <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
