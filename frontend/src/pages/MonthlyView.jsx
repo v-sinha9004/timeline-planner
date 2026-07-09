@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, X, Loader2 } from 'lucide-react';
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth } from 'date-fns';
 import { useData } from '../contexts/DataContext';
+import { useUser } from '../contexts/UserContext';
 
 export default function MonthlyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
-  const { getTasksForDate, getSubjectById, updateTask } = useData();
+  const { getTasksForDate, getSubjectById, updateTask, syncStatus } = useData();
+  const { activeUser } = useUser();
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -127,12 +129,19 @@ export default function MonthlyView() {
         </div>
       </div>
 
-      <div className="monthly-grid">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-          <div key={d} className="month-day-header">{d}</div>
-        ))}
-        {rows}
-      </div>
+      {syncStatus === 'syncing' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 0', color: '#db2777', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+          <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
+          <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
+        </div>
+      ) : (
+        <div className="monthly-grid">
+          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
+            <div key={d} className="month-day-header">{d}</div>
+          ))}
+          {rows}
+        </div>
+      )}
 
       {selectedDay && (
         <div className="modal-overlay" onClick={() => setSelectedDay(null)}>

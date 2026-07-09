@@ -4,10 +4,12 @@ import ThemeToggle from '../ThemeToggle';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import TaskModal from '../TaskModal';
+import { useUser } from '../../contexts/UserContext';
 
 export default function TopBar() {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { activeUser, setActiveUser } = useUser();
   
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -29,6 +31,26 @@ export default function TopBar() {
       </div>
 
       <div className="topbar-actions">
+        <div className="user-toggle">
+          <div 
+            className="user-toggle-slider" 
+            style={{ 
+              transform: activeUser === 'Vishal' ? 'translateX(0)' : 'translateX(100%)' 
+            }} 
+          />
+          <button 
+            className={`user-toggle-btn ${activeUser === 'Vishal' ? 'active' : ''}`}
+            onClick={() => setActiveUser('Vishal')}
+          >
+            Vishal
+          </button>
+          <button 
+            className={`user-toggle-btn ${activeUser === 'Aradhana' ? 'active' : ''}`}
+            onClick={() => setActiveUser('Aradhana')}
+          >
+            Aradhana
+          </button>
+        </div>
         <button 
           className="btn btn-primary" 
           style={{ padding: '8px', borderRadius: '50%' }}

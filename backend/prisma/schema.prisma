@@ -39,6 +39,7 @@ model Subtopic {
 model Task {
   id           String      @id @default(uuid())
   title        String
+  owner        String      @default("Vishal")
   subjectId    String?
   subject      Subject?    @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   subtopicId   String?

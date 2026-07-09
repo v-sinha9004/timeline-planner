@@ -1,8 +1,9 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
+import { useUser } from './UserContext';
 
 const DataContext = createContext();
 
-const API_BASE = 'https://timeline-planner-gamma.vercel.app';
+const API_BASE = 'http://localhost:5002';
 
 const DEFAULT_SUBJECTS = [
   { id: 'subj-history-001', name: 'Indian History', color: '#f59e0b', icon: '📜', order: 0, subtopics: [] },
@@ -63,14 +64,18 @@ function dataReducer(state, action) {
 
 export function DataProvider({ children }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
+  const { activeUser } = useUser();
 
   // Initial Data Load & Fetch
   useEffect(() => {
     // 1. Load from localStorage
-    const savedData = localStorage.getItem('upsc-planner-data');
+    const savedData = localStorage.getItem(`upsc-planner-data-${activeUser}`);
     if (savedData) {
       const { subjects, tasks } = JSON.parse(savedData);
       dispatch({ type: 'SET_STATE', payload: { subjects, tasks } });
+    } else {
+      // Clear tasks if switching to a user with no local data yet, so we don't show previous user's tasks while fetching
+      dispatch({ type: 'SET_STATE', payload: { tasks: [] } });
     }
 
     // 2. Fetch fresh from DB asynchronously
@@ -78,7 +83,7 @@ export function DataProvider({ children }) {
 
     Promise.all([
       fetch(`${API_BASE}/api/subjects`).then(res => res.json()).catch(() => null),
-      fetch(`${API_BASE}/api/tasks`).then(res => res.json()).catch(() => null),
+      fetch(`${API_BASE}/api/tasks?owner=${activeUser}`).then(res => res.json()).catch(() => null),
     ]).then(([subjects, tasks]) => {
       let isOffline = false;
       const updates = {};
@@ -107,7 +112,7 @@ export function DataProvider({ children }) {
       
       dispatch({ type: 'SET_SYNC_STATUS', payload: isOffline ? 'offline' : 'synced' });
     });
-  }, []);
+  }, [activeUser]);
 
   // Save changes to localStorage
   useEffect(() => {
@@ -116,13 +121,13 @@ export function DataProvider({ children }) {
         subjects: state.subjects,
         tasks: state.tasks
       };
-      localStorage.setItem('upsc-planner-data', JSON.stringify(stateToSave));
+      localStorage.setItem(`upsc-planner-data-${activeUser}`, JSON.stringify(stateToSave));
     }
-  }, [state.subjects, state.tasks]);
+  }, [state.subjects, state.tasks, activeUser]);
 
   // Actions
   const addTask = useCallback(async (task) => {
-    const newTask = { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    const newTask = { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString(), owner: activeUser };
     dispatch({ type: 'ADD_TASK', payload: newTask });
     
     try {
@@ -137,7 +142,7 @@ export function DataProvider({ children }) {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
       console.error('Failed to save task to server:', err);
     }
-  }, []);
+  }, [activeUser]);
 
   const updateTask = useCallback(async (id, updates) => {
     dispatch({ type: 'UPDATE_TASK', payload: { id, updates } });

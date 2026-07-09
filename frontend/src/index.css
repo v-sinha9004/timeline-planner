@@ -625,3 +625,48 @@ input:focus, select:focus, textarea:focus {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+
+/* User Toggle */
+.user-toggle {
+  position: relative;
+  display: flex;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  padding: 4px;
+  width: 200px; /* Fixed width to allow consistent 50% sliding */
+}
+
+.user-toggle-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  z-index: 0;
+}
+
+.user-toggle-btn {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  text-align: center;
+}
+.user-toggle-btn:hover {
+  color: var(--text-primary);
+}
+.user-toggle-btn.active {
+  color: var(--text-primary);
+}

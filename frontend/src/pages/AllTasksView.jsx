@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useUser } from '../contexts/UserContext';
 import TaskRow from '../components/TaskRow';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 
 export default function AllTasksView() {
-  const { tasks, subjects, getSubjectById } = useData();
+  const { tasks, subjects, getSubjectById, syncStatus } = useData();
+  const { activeUser } = useUser();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [subjectFilter, setSubjectFilter] = useState('ALL');
@@ -46,37 +48,44 @@ export default function AllTasksView() {
       </div>
 
       <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '12px 24px', border: '1px solid var(--border)' }}>
-        <table className="task-table">
-          <thead>
-            <tr>
-              <th style={{ width: '40px' }}></th>
-              <th>Task</th>
-              <th>Subject</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTasks.length > 0 ? (
-              filteredTasks.map(task => (
-                <TaskRow 
-                  key={task.id} 
-                  task={task} 
-                  subject={getSubjectById(task.subjectId)} 
-                />
-              ))
-            ) : (
+        {syncStatus === 'syncing' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
+            <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
+            <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
+          </div>
+        ) : (
+          <table className="task-table">
+            <thead>
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
-                  No tasks found matching your filters.
-                </td>
+                <th style={{ width: '40px' }}></th>
+                <th>Task</th>
+                <th>Subject</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredTasks.length > 0 ? (
+                filteredTasks.map(task => (
+                  <TaskRow 
+                    key={task.id} 
+                    task={task} 
+                    subject={getSubjectById(task.subjectId)} 
+                  />
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-tertiary)' }}>
+                    No tasks found matching your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

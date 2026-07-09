@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useUser } from '../contexts/UserContext';
 import TaskRow from '../components/TaskRow';
 import QuickAdd from '../components/QuickAdd';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import ProgressRing from '../components/ProgressRing';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 export default function TodayView() {
-  const { getTasksForDate, getSubjectById } = useData();
+  const { getTasksForDate, getSubjectById, syncStatus } = useData();
+  const { activeUser } = useUser();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const tasks = getTasksForDate(todayStr);
 
@@ -35,7 +38,7 @@ export default function TodayView() {
     <div className="today-view">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{greeting()}, Vishal! 🌸</h1>
+          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{greeting()}, {activeUser}! 🌸</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Here is your plan for today.</p>
         </div>
         <ProgressRing progress={progress} size={80} />
@@ -63,7 +66,12 @@ export default function TodayView() {
       </div>
 
       <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--border)' }}>
-        {displayTasks.length > 0 ? (
+        {syncStatus === 'syncing' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
+            <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
+            <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
+          </div>
+        ) : displayTasks.length > 0 ? (
           <table className="task-table">
             <thead>
               <tr>

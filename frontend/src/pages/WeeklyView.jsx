@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { useData } from '../contexts/DataContext';
+import { useUser } from '../contexts/UserContext';
 
 export default function WeeklyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { getTasksForDate, getSubjectById, updateTask } = useData();
+  const { getTasksForDate, getSubjectById, updateTask, syncStatus } = useData();
+  const { activeUser } = useUser();
   
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday start
   const days = Array.from({ length: 7 }).map((_, i) => addDays(startDate, i));
@@ -27,7 +29,13 @@ export default function WeeklyView() {
         </h3>
       </div>
 
-      <div className="weekly-grid-new">
+      {syncStatus === 'syncing' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 0', color: '#db2777', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+          <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
+          <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
+        </div>
+      ) : (
+        <div className="weekly-grid-new">
         {days.map((day, i) => {
           const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
           return (
@@ -130,7 +138,8 @@ export default function WeeklyView() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

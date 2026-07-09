@@ -7,8 +7,10 @@ const prisma = new PrismaClient();
 // GET /api/tasks — list tasks with optional filters
 router.get('/', async (req, res) => {
   try {
-    const { date, subjectId, status, startDate, endDate } = req.query;
+    const { date, subjectId, status, startDate, endDate, owner } = req.query;
     const where = {};
+    
+    if (owner) where.owner = owner;
 
     if (date) {
       const d = new Date(date);
