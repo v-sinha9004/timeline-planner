@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Edit2, Trash2, Check, X } from 'lucide-react';
 import SubjectBadge from './SubjectBadge';
 import { useData } from '../contexts/DataContext';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, parseISO, isValid } from 'date-fns';
 
 export default function TaskRow({ task, subject, dateStr, hideStatus = false }) {
   const { updateTask, deleteTask } = useData();
@@ -13,9 +13,37 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
   const [editEndDate, setEditEndDate] = useState(task.endDate || '');
   const inputRef = useRef(null);
 
-  const isCompleted = dateStr 
-    ? (task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr))
-    : task.status === 'COMPLETED';
+  let isCompleted = false;
+  if (dateStr) {
+    isCompleted = task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr);
+  } else {
+    isCompleted = task.status === 'COMPLETED';
+    if (!isCompleted && (task.completedDates || []).length > 0) {
+      if (task.startDate && task.endDate) {
+        try {
+          const start = parseISO(task.startDate);
+          const end = parseISO(task.endDate);
+          if (isValid(start) && isValid(end) && start <= end) {
+            const allDates = eachDayOfInterval({ start, end }).map(d => format(d, 'yyyy-MM-dd'));
+            const completed = task.completedDates || [];
+            if (allDates.length > 0 && allDates.every(d => completed.includes(d))) {
+              isCompleted = true;
+            }
+          }
+        } catch (e) {
+          // Ignore
+        }
+      } else if (task.startDate && !task.endDate) {
+        if ((task.completedDates || []).includes(task.startDate.substring(0, 10))) {
+          isCompleted = true;
+        }
+      } else if (!task.startDate && task.endDate) {
+        if ((task.completedDates || []).includes(task.endDate.substring(0, 10))) {
+          isCompleted = true;
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -36,7 +64,11 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
         updateTask(task.id, { completedDates: newCompletedDates });
       }
     } else {
-      updateTask(task.id, { status: isCompleted ? 'PENDING' : 'COMPLETED' });
+      const updates = { status: isCompleted ? 'PENDING' : 'COMPLETED' };
+      if (isCompleted) {
+        updates.completedDates = [];
+      }
+      updateTask(task.id, updates);
     }
   };
 

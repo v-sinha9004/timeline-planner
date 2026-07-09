@@ -2,6 +2,8 @@ import { createContext, useContext, useReducer, useEffect, useCallback, useRef }
 
 const DataContext = createContext();
 
+const API_BASE = 'https://timeline-planner-gamma.vercel.app';
+
 const DEFAULT_SUBJECTS = [
   { id: 'subj-history-001', name: 'Indian History', color: '#f59e0b', icon: '📜', order: 0, subtopics: [] },
   { id: 'subj-geography-001', name: 'Geography', color: '#84cc16', icon: '🌍', order: 1, subtopics: [] },
@@ -75,8 +77,8 @@ export function DataProvider({ children }) {
     dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
     Promise.all([
-      fetch('/api/subjects').then(res => res.json()).catch(() => null),
-      fetch('/api/tasks').then(res => res.json()).catch(() => null),
+      fetch(`${API_BASE}/api/subjects`).then(res => res.json()).catch(() => null),
+      fetch(`${API_BASE}/api/tasks`).then(res => res.json()).catch(() => null),
     ]).then(([subjects, tasks]) => {
       let isOffline = false;
       const updates = {};
@@ -125,7 +127,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch('/api/tasks', {
+      await fetch(`${API_BASE}/api/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTask)
@@ -142,7 +144,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch(`/api/tasks/${id}`, {
+      await fetch(`${API_BASE}/api/tasks/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -159,7 +161,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/tasks/${id}`, { method: 'DELETE' });
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
     } catch (err) {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
@@ -173,7 +175,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch('/api/subjects', {
+      await fetch(`${API_BASE}/api/subjects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSubject)
@@ -190,7 +192,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch(`/api/subjects/${id}`, {
+      await fetch(`${API_BASE}/api/subjects/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -207,7 +209,7 @@ export function DataProvider({ children }) {
     
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/subjects/${id}`, { method: 'DELETE' });
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
     } catch (err) {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
