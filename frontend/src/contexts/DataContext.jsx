@@ -65,97 +65,217 @@ function dataReducer(state, action) {
 export function DataProvider({ children }) {
   const [state, dispatch] = useReducer(dataReducer, initialState);
 
-  const isFirstRender = useRef(true);
+  const isFirstRenderSubjects = useRef(true);
+  const isFirstRenderTasks = useRef(true);
+  const isFirstRenderTimeLogs = useRef(true);
 
-  // Load from localStorage on mount, then fetch fresh from DB
+  // Initial Data Load & Fetch
   useEffect(() => {
-    const saved = localStorage.getItem('upsc-planner-data');
-    if (saved) {
-      dispatch({ type: 'SET_STATE', payload: JSON.parse(saved) });
-    } else {
-      dispatch({ type: 'SET_STATE', payload: { subjects: DEFAULT_SUBJECTS } });
-    }
-    
-    // Lazy sync from Supabase
-    fetch('/api/sync')
-      .then(res => res.json())
-      .then(data => {
-        if (data && (data.subjects?.length > 0 || data.tasks?.length > 0)) {
-          // Normalize dates from backend (ISO strings) to local yyyy-MM-dd
-          if (data.tasks) {
-            data.tasks = data.tasks.map(t => ({
-              ...t,
-              date: t.date ? t.date.substring(0, 10) : null,
-              startDate: t.startDate ? t.startDate.substring(0, 10) : null,
-              endDate: t.endDate ? t.endDate.substring(0, 10) : null,
-            }));
-          }
-          if (data.timeLogs) {
-            data.timeLogs = data.timeLogs.map(log => ({
-              ...log,
-              date: log.date ? log.date.substring(0, 10) : null,
-            }));
-          }
-          dispatch({ type: 'SET_STATE', payload: data });
-        }
-      })
-      .catch(err => {
-        console.error('Failed to fetch from DB on load:', err);
-        dispatch({ type: 'SET_SYNC_STATUS', payload: 'offline' });
-      });
+    // 1. Load from localStorage
+    const savedSubjects = localStorage.getItem('upsc-planner-subjects');
+    const savedTasks = localStorage.getItem('upsc-planner-tasks');
+    const savedTimeLogs = localStorage.getItem('upsc-planner-timelogs');
+
+    const subjectsToLoad = savedSubjects ? JSON.parse(savedSubjects) : DEFAULT_SUBJECTS;
+    const tasksToLoad = savedTasks ? JSON.parse(savedTasks) : [];
+    const timeLogsToLoad = savedTimeLogs ? JSON.parse(savedTimeLogs) : [];
+
+    dispatch({ 
+      type: 'SET_STATE', 
+      payload: { 
+        subjects: subjectsToLoad, 
+        tasks: tasksToLoad, 
+        timeLogs: timeLogsToLoad 
+      } 
+    });
+
+    // 2. Fetch fresh from DB asynchronously
+    dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+
+    Promise.all([
+      fetch('/api/subjects').then(res => res.json()).catch(() => null),
+      fetch('/api/tasks').then(res => res.json()).catch(() => null),
+      fetch('/api/timelogs').then(res => res.json()).catch(() => null)
+    ]).then(([subjects, tasks, timeLogs]) => {
+      let isOffline = false;
+      const updates = {};
+
+      if (subjects && Array.isArray(subjects)) {
+        updates.subjects = subjects;
+        localStorage.setItem('upsc-planner-subjects', JSON.stringify(subjects));
+      } else if (subjects === null) {
+        isOffline = true;
+      }
+
+      if (tasks && Array.isArray(tasks)) {
+        // Normalize dates from backend
+        updates.tasks = tasks.map(t => ({
+          ...t,
+          date: t.date ? t.date.substring(0, 10) : null,
+          startDate: t.startDate ? t.startDate.substring(0, 10) : null,
+          endDate: t.endDate ? t.endDate.substring(0, 10) : null,
+        }));
+        localStorage.setItem('upsc-planner-tasks', JSON.stringify(updates.tasks));
+      } else if (tasks === null) {
+        isOffline = true;
+      }
+
+      if (timeLogs && Array.isArray(timeLogs)) {
+        updates.timeLogs = timeLogs.map(log => ({
+          ...log,
+          date: log.date ? log.date.substring(0, 10) : null,
+        }));
+        localStorage.setItem('upsc-planner-timelogs', JSON.stringify(updates.timeLogs));
+      } else if (timeLogs === null) {
+        isOffline = true;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        dispatch({ type: 'SET_STATE', payload: updates });
+      }
+      
+      dispatch({ type: 'SET_SYNC_STATUS', payload: isOffline ? 'offline' : 'synced' });
+    });
   }, []);
 
-  // Save to localStorage and debounce POST to DB
+  // Save changes to localStorage immediately on update
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (isFirstRenderSubjects.current) {
+      isFirstRenderSubjects.current = false;
       return;
     }
+    localStorage.setItem('upsc-planner-subjects', JSON.stringify(state.subjects));
+  }, [state.subjects]);
 
-    if (state.subjects.length > 0 || state.tasks.length > 0) {
-      const stateToSave = {
-        subjects: state.subjects,
-        tasks: state.tasks,
-        timeLogs: state.timeLogs
-      };
-      localStorage.setItem('upsc-planner-data', JSON.stringify(stateToSave));
-      
-      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-      const timer = setTimeout(() => {
-        fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(stateToSave)
-        })
-        .then(res => {
-          if (!res.ok) throw new Error('Sync failed');
-          dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
-        })
-        .catch(err => {
-          console.error('Sync POST failed:', err);
-          dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
-        });
-      }, 500); // 500ms debounce
-      
-      return () => clearTimeout(timer);
+  useEffect(() => {
+    if (isFirstRenderTasks.current) {
+      isFirstRenderTasks.current = false;
+      return;
     }
-  }, [state.subjects, state.tasks, state.timeLogs]);
+    localStorage.setItem('upsc-planner-tasks', JSON.stringify(state.tasks));
+  }, [state.tasks]);
 
-  // Actions
-  const addTask = useCallback((task) => {
-    dispatch({ type: 'ADD_TASK', payload: { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString() } });
+  useEffect(() => {
+    if (isFirstRenderTimeLogs.current) {
+      isFirstRenderTimeLogs.current = false;
+      return;
+    }
+    localStorage.setItem('upsc-planner-timelogs', JSON.stringify(state.timeLogs));
+  }, [state.timeLogs]);
+
+  // Actions - Optimistic updates followed by API calls
+  const addTask = useCallback(async (task) => {
+    const newTask = { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    dispatch({ type: 'ADD_TASK', payload: newTask });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTask)
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to save task to server:', err);
+    }
   }, []);
 
-  const updateTask = useCallback((id, updates) => {
+  const updateTask = useCallback(async (id, updates) => {
     dispatch({ type: 'UPDATE_TASK', payload: { id, updates } });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch(`/api/tasks/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to update task on server:', err);
+    }
   }, []);
 
-  const deleteTask = useCallback((id) => {
+  const deleteTask = useCallback(async (id) => {
     dispatch({ type: 'DELETE_TASK', payload: id });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to delete task on server:', err);
+    }
   }, []);
 
-  const addTimeLog = useCallback((log) => {
-    dispatch({ type: 'ADD_TIMELOG', payload: { ...log, id: crypto.randomUUID(), createdAt: new Date().toISOString() } });
+  const addTimeLog = useCallback(async (log) => {
+    const newLog = { ...log, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    dispatch({ type: 'ADD_TIMELOG', payload: newLog });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch('/api/timelogs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLog)
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to save time log to server:', err);
+    }
+  }, []);
+
+  const addSubject = useCallback(async (subject) => {
+    const newSubject = { ...subject, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    dispatch({ type: 'ADD_SUBJECT', payload: newSubject });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch('/api/subjects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSubject)
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to save subject to server:', err);
+    }
+  }, []);
+
+  const updateSubject = useCallback(async (id, updates) => {
+    dispatch({ type: 'UPDATE_SUBJECT', payload: { id, updates } });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch(`/api/subjects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to update subject on server:', err);
+    }
+  }, []);
+
+  const deleteSubject = useCallback(async (id) => {
+    dispatch({ type: 'DELETE_SUBJECT', payload: id });
+    
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to delete subject on server:', err);
+    }
   }, []);
 
   // Selectors
@@ -174,18 +294,6 @@ export function DataProvider({ children }) {
       return false;
     });
   }, [state.tasks]);
-
-  const addSubject = useCallback((subject) => {
-    dispatch({ type: 'ADD_SUBJECT', payload: { ...subject, id: crypto.randomUUID(), createdAt: new Date().toISOString() } });
-  }, []);
-
-  const updateSubject = useCallback((id, updates) => {
-    dispatch({ type: 'UPDATE_SUBJECT', payload: { id, updates } });
-  }, []);
-
-  const deleteSubject = useCallback((id) => {
-    dispatch({ type: 'DELETE_SUBJECT', payload: id });
-  }, []);
 
   const value = {
     ...state,

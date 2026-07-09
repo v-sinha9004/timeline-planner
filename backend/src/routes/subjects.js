@@ -36,9 +36,23 @@ router.get('/:id', async (req, res) => {
 // POST /api/subjects — create subject
 router.post('/', async (req, res) => {
   try {
-    const { id, name, color, icon, order } = req.body;
+    const { id, name, color, icon, order, subtopics } = req.body;
     const subject = await prisma.subject.create({
-      data: { id, name, color, icon, order: order ?? 0 },
+      data: { 
+        id, 
+        name, 
+        color, 
+        icon, 
+        order: order ?? 0,
+        subtopics: subtopics && subtopics.length > 0 ? {
+          create: subtopics.map(st => ({
+            id: st.id,
+            name: st.name,
+            completed: st.completed ?? false,
+            order: st.order ?? 0
+          }))
+        } : undefined
+      },
       include: { subtopics: true },
     });
     res.status(201).json(subject);
@@ -51,11 +65,46 @@ router.post('/', async (req, res) => {
 // PUT /api/subjects/:id — update subject
 router.put('/:id', async (req, res) => {
   try {
-    const { name, color, icon, order } = req.body;
-    const subject = await prisma.subject.update({
+    const { name, color, icon, order, subtopics } = req.body;
+    
+    // Update the subject itself
+    await prisma.subject.update({
       where: { id: req.params.id },
       data: { name, color, icon, order },
-      include: { subtopics: true },
+    });
+
+    if (subtopics) {
+      // Delete subtopics not in the new list
+      await prisma.subtopic.deleteMany({
+        where: {
+          subjectId: req.params.id,
+          id: { notIn: subtopics.map(st => st.id) }
+        }
+      });
+
+      // Upsert the remaining subtopics
+      for (const st of subtopics) {
+        await prisma.subtopic.upsert({
+          where: { id: st.id },
+          update: { 
+            name: st.name, 
+            completed: st.completed ?? false,
+            order: st.order ?? 0 
+          },
+          create: { 
+            id: st.id, 
+            name: st.name, 
+            subjectId: req.params.id, 
+            completed: st.completed ?? false, 
+            order: st.order ?? 0 
+          }
+        });
+      }
+    }
+
+    const subject = await prisma.subject.findUnique({
+      where: { id: req.params.id },
+      include: { subtopics: { orderBy: { order: 'asc' } } },
     });
     res.json(subject);
   } catch (error) {
