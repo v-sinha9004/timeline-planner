@@ -34,7 +34,7 @@ export default function AllTasksView() {
   return (
     <div className="all-tasks">
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+        <div style={{ position: 'relative', flex: '1 1 200px' }}>
           <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-secondary)' }} />
           <input 
             type="text" 
@@ -45,21 +45,21 @@ export default function AllTasksView() {
           />
         </div>
         
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select style={{ flex: '1 1 120px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="ALL">All Statuses</option>
           <option value="PENDING">Pending</option>
           <option value="IN_PROGRESS">In Progress</option>
           <option value="COMPLETED">Completed</option>
         </select>
 
-        <select value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+        <select style={{ flex: '1 1 120px' }} value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
           <option value="ALL">All Subjects</option>
           {subjects.map(s => (
             <option key={s.id} value={s.id}>{s.name}</option>
           ))}
         </select>
 
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', flex: '1 1 160px' }}>
           <select 
             value={`${sortConfig.key}-${sortConfig.direction}`}
             onChange={(e) => {
@@ -71,6 +71,7 @@ export default function AllTasksView() {
               color: '#db2777',
               border: '1px solid #fbcfe8',
               borderRadius: '8px',
+              width: '100%',
               padding: '8px 32px 8px 16px',
               fontWeight: '600',
               cursor: 'pointer',
@@ -96,7 +97,7 @@ export default function AllTasksView() {
         </div>
       </div>
 
-      <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '12px 24px', border: '1px solid var(--border)' }}>
+      <div className="table-container" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
         {syncStatus === 'fetching' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
             <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />

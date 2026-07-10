@@ -308,11 +308,14 @@ input:focus, select:focus, textarea:focus {
   font-weight: 500;
 }
 
+.table-container {
+  padding: 12px 24px;
+}
+
 /* Task Table (Today & All Tasks) */
 .task-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 16px;
 }
 .task-table th {
   text-align: left;
@@ -735,6 +738,10 @@ input:focus, select:focus, textarea:focus {
   .weekly-grid-new,
   .monthly-grid {
     min-width: 700px;
+  }
+  .table-container {
+    padding: 8px 4px;
+    overflow-x: auto;
   }
   .subjects-grid {
     grid-template-columns: 1fr;
