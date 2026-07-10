@@ -59,7 +59,7 @@ export default function TodayView() {
     <div className="today-view">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{greeting()}, {activeUser}! 🌸</h1>
+          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{greeting()}, {activeUser}! {activeUser === 'Vishal' ? '🪻' : '🌸'}</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Here is your plan for today.</p>
         </div>
         <ProgressRing progress={progress} size={80} />
@@ -70,16 +70,16 @@ export default function TodayView() {
         <button 
           onClick={() => setSortByPriority(!sortByPriority)}
           style={{ 
-            backgroundColor: sortByPriority ? '#fce7f3' : 'var(--bg-secondary)', 
-            color: sortByPriority ? '#db2777' : 'var(--text-secondary)',
-            border: `1px solid ${sortByPriority ? '#fbcfe8' : 'var(--border)'}`,
+            backgroundColor: sortByPriority ? 'var(--accent-softer)' : 'var(--bg-secondary)', 
+            color: sortByPriority ? 'var(--accent)' : 'var(--text-secondary)',
+            border: `1px solid ${sortByPriority ? 'var(--accent-soft)' : 'var(--border)'}`,
             padding: '6px 16px',
             borderRadius: '20px',
             fontSize: '13px',
             fontWeight: 600,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            boxShadow: sortByPriority ? '0 2px 4px rgba(219, 39, 119, 0.1)' : 'none'
+            boxShadow: sortByPriority ? 'var(--shadow-sm)' : 'none'
           }}
         >
           Priority
@@ -88,7 +88,7 @@ export default function TodayView() {
 
       <div style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', padding: '24px', border: '1px solid var(--border)' }}>
         {syncStatus === 'fetching' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: activeUser === 'Vishal' ? 'var(--accent)' : '#db2777' }}>
             <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
             <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
           </div>
@@ -119,7 +119,7 @@ export default function TodayView() {
           </table>
         ) : (
           <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-tertiary)' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌷</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>{activeUser === 'Vishal' ? '🪻' : '🌷'}</div>
             <h3>No tasks for today!</h3>
             <p>Add some below to get started.</p>
           </div>

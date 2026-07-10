@@ -9,6 +9,7 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     localStorage.setItem('upsc-active-user', activeUser);
+    document.documentElement.setAttribute('data-user', activeUser.toLowerCase());
   }, [activeUser]);
 
   return (

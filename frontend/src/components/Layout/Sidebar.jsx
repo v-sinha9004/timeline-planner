@@ -1,14 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { Calendar, CalendarRange, CalendarDays, ListTodo, LibraryBig, Timer } from 'lucide-react';
 import SyncIndicator from '../SyncIndicator';
+import { useUser } from '../../contexts/UserContext';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
+  const { activeUser } = useUser();
+  const imageSrc = activeUser === 'Vishal' ? '/have_a_nice_day_blue.jpg' : '/have_a_nice_day.jpg';
   return (
     <>
       <div className={`mobile-overlay ${isOpen ? 'open' : ''}`} onClick={() => setIsOpen(false)}></div>
       <div className={`sidebar ${isOpen ? 'mobile-open' : ''}`}>
       <div className="sidebar-header">
-        <img src="/have_a_nice_day.jpg" alt="Have a nice day" className="sidebar-image" />
+        <img src={imageSrc} alt="Have a nice day" className="sidebar-image" />
         <h2 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           ✨ UPSC Planner
         </h2>

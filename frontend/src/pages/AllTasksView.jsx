@@ -67,9 +67,9 @@ export default function AllTasksView() {
               setSortConfig({ key, direction });
             }}
             style={{
-              backgroundColor: '#fdf2f8',
-              color: '#db2777',
-              border: '1px solid #fbcfe8',
+              backgroundColor: 'var(--accent-softer)',
+              color: 'var(--accent)',
+              border: '1px solid var(--accent-soft)',
               borderRadius: '8px',
               width: '100%',
               padding: '8px 32px 8px 16px',
@@ -82,8 +82,8 @@ export default function AllTasksView() {
               fontSize: '14px',
               transition: 'background-color 0.2s'
             }}
-            onMouseOver={(e) => e.target.style.backgroundColor = '#fce7f3'}
-            onMouseOut={(e) => e.target.style.backgroundColor = '#fdf2f8'}
+            onMouseOver={(e) => e.target.style.backgroundColor = 'var(--accent-soft)'}
+            onMouseOut={(e) => e.target.style.backgroundColor = 'var(--accent-softer)'}
           >
             <option value="none-asc">Sort by...</option>
             <option value="startDate-asc">Start Date (Ascending)</option>
@@ -91,7 +91,7 @@ export default function AllTasksView() {
             <option value="endDate-asc">End Date (Ascending)</option>
             <option value="endDate-desc">End Date (Descending)</option>
           </select>
-          <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#db2777', fontSize: '10px' }}>
+          <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--accent)', fontSize: '10px' }}>
             ▼
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function AllTasksView() {
 
       <div className="table-container" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
         {syncStatus === 'fetching' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: '#db2777' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: 'var(--accent)' }}>
             <Loader2 className="animate-spin" size={48} style={{ marginBottom: '16px' }} />
             <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
           </div>

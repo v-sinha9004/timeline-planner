@@ -55,6 +55,46 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
 }
 
+/* Vishal Light Theme (Blue) */
+[data-user="vishal"] {
+  --bg-primary: #f0f7ff;
+  --bg-secondary: #e0f2fe;
+  --bg-tertiary: #bae6fd;
+  --bg-hover: #7dd3fc;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-soft: #bfdbfe;
+  --accent-softer: #dbeafe;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --border: #bae6fd;
+  --border-strong: #7dd3fc;
+  --shadow-sm: 0 1px 3px rgba(59, 130, 246, 0.06);
+  --shadow-md: 0 4px 12px rgba(59, 130, 246, 0.08);
+  --shadow-lg: 0 8px 24px rgba(59, 130, 246, 0.12);
+}
+
+/* Vishal Dark Theme (Dark Blue) */
+[data-theme="dark"][data-user="vishal"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-hover: #475569;
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --accent-soft: #1e3a8a;
+  --accent-softer: #172554;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #64748b;
+  --border: #334155;
+  --border-strong: #475569;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
