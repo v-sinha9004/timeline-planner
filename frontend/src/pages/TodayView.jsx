@@ -5,15 +5,18 @@ import TaskRow from '../components/TaskRow';
 import QuickAdd from '../components/QuickAdd';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import ProgressRing from '../components/ProgressRing';
-import { format } from 'date-fns';
+import { format, getDayOfYear } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Loader2, Send } from 'lucide-react';
+import { quotes } from '../data/quotes';
 
 export default function TodayView() {
   const { getTasksForDate, getSubjectById, syncStatus, subjects, addTask } = useData();
   const { activeUser } = useUser();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const tasks = getTasksForDate(todayStr);
+  const dayOfYear = getDayOfYear(new Date());
+  const dailyQuote = quotes[(dayOfYear - 1) % quotes.length];
 
   const [sortByPriority, setSortByPriority] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -60,7 +63,7 @@ export default function TodayView() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{greeting()}, {activeUser}! {activeUser === 'Vishal' ? '🪻' : '🌸'}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Here is your plan for today.</p>
+          <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontWeight: 500 }}>"{dailyQuote}"</p>
         </div>
         <ProgressRing progress={progress} size={80} />
       </div>
