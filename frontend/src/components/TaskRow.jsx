@@ -369,31 +369,31 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false, re
               bottom: '100%',
               right: 0,
               marginBottom: '4px',
-              backgroundColor: '#fff1f2', // pink-50
-              border: '1px solid #fecdd3', // pink-300
+              backgroundColor: 'var(--bg-secondary)',
+              border: '1px solid var(--border-strong)',
               borderRadius: '8px',
               padding: '8px 12px',
-              boxShadow: '0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1)',
+              boxShadow: 'var(--shadow-md)',
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
               zIndex: 50,
               minWidth: '140px'
             }}>
-              <span style={{ fontSize: '13px', color: '#be123c', fontWeight: '500', textAlign: 'center', margin: 0 }}>Delete this task?</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500', textAlign: 'center', margin: 0 }}>Delete this task?</span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button 
                   onClick={() => deleteTask(task.id)}
-                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: '#f43f5e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#e11d48'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = '#f43f5e'}
+                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: 'var(--accent)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = 'var(--accent-hover)'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'var(--accent)'}
                 >
                   Yes
                 </button>
                 <button 
                   onClick={() => setShowDeleteConfirm(false)}
-                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: 'transparent', color: '#be123c', border: '1px solid #fda4af', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = '#ffe4e6'}
+                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border-strong)', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = 'var(--bg-tertiary)'}
                   onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
                   No
