@@ -67,6 +67,40 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// POST /api/tasks/bulk — create multiple tasks at once
+router.post('/bulk', async (req, res) => {
+  try {
+    const { tasks } = req.body;
+    
+    if (!tasks || !Array.isArray(tasks)) {
+      return res.status(400).json({ error: 'Tasks array is required' });
+    }
+
+    const tasksToCreate = tasks.map(taskData => {
+      const { recurrence, date, startDate, endDate, ...rest } = taskData;
+      
+      if (rest.subjectId === '') rest.subjectId = null;
+      if (rest.subtopicId === '') rest.subtopicId = null;
+
+      return {
+        ...rest,
+        date: date ? new Date(date) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+      };
+    });
+
+    const result = await prisma.task.createMany({
+      data: tasksToCreate,
+    });
+    
+    res.status(201).json({ count: result.count });
+  } catch (error) {
+    console.error('Error creating multiple tasks:', error);
+    res.status(500).json({ error: 'Failed to create tasks' });
+  }
+});
+
 // POST /api/tasks — create task with optional recurrence
 router.post('/', async (req, res) => {
   try {

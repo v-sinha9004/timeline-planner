@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useData } from '../contexts/DataContext';
-import { X } from 'lucide-react';
+import { X, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
-  const { subjects, addTask, updateTask } = useData();
+  const { subjects, addTask, updateTask, addMultipleTasks } = useData();
 
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -13,6 +13,9 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [priority, setPriority] = useState('MEDIUM');
+  
+  const [isMultipleDates, setIsMultipleDates] = useState(false);
+  const [dateRanges, setDateRanges] = useState([{ id: '1', startDate: format(new Date(), 'yyyy-MM-dd'), endDate: format(new Date(), 'yyyy-MM-dd') }]);
 
   useEffect(() => {
     if (isOpen) {
@@ -30,6 +33,8 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
         setStartDate(format(new Date(), 'yyyy-MM-dd'));
         setEndDate(format(new Date(), 'yyyy-MM-dd'));
         setPriority('MEDIUM');
+        setIsMultipleDates(false);
+        setDateRanges([{ id: '1', startDate: format(new Date(), 'yyyy-MM-dd'), endDate: format(new Date(), 'yyyy-MM-dd') }]);
       }
     }
   }, [isOpen, taskToEdit]);
@@ -43,20 +48,33 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
       return;
     }
 
-    const taskData = {
-      title: title.trim(),
-      subjectId,
-      subtopicId,
-      startDate,
-      endDate,
-      priority,
-      status: taskToEdit ? taskToEdit.status : 'PENDING'
-    };
-
-    if (taskToEdit) {
-      updateTask(taskToEdit.id, taskData);
+    if (isMultipleDates) {
+      const tasksToCreate = dateRanges.map(range => ({
+        title: title.trim(),
+        subjectId,
+        subtopicId,
+        startDate: range.startDate,
+        endDate: range.endDate,
+        priority,
+        status: 'PENDING'
+      }));
+      addMultipleTasks(tasksToCreate);
     } else {
-      addTask(taskData);
+      const taskData = {
+        title: title.trim(),
+        subjectId,
+        subtopicId,
+        startDate,
+        endDate,
+        priority,
+        status: taskToEdit ? taskToEdit.status : 'PENDING'
+      };
+
+      if (taskToEdit) {
+        updateTask(taskToEdit.id, taskData);
+      } else {
+        addTask(taskData);
+      }
     }
     
     onClose();
@@ -70,7 +88,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
           <button className="btn-icon" onClick={onClose}><X size={20} /></button>
         </div>
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div className="modal-body flex-col gap-lg">
             
             <div className="flex-col gap-sm">
@@ -132,32 +150,97 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
               )}
             </div>
 
-            <div className="flex gap-md flex-col-mobile">
-              <div className="flex-col gap-sm" style={{ flex: 1 }}>
-                <label style={{ fontWeight: 500 }}>Start Date</label>
+            {!taskToEdit && (
+              <div className="flex gap-sm align-center">
                 <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={e => {
-                    const newStartDate = e.target.value;
-                    setStartDate(newStartDate);
-                    if (endDate && newStartDate > endDate) {
-                      setEndDate(newStartDate);
-                    }
-                  }}
+                  type="checkbox" 
+                  id="multiple-dates" 
+                  checked={isMultipleDates}
+                  onChange={e => setIsMultipleDates(e.target.checked)}
                 />
+                <label htmlFor="multiple-dates" style={{ fontWeight: 500, cursor: 'pointer' }}>Add to multiple dates</label>
               </div>
+            )}
 
-              <div className="flex-col gap-sm" style={{ flex: 1 }}>
-                <label style={{ fontWeight: 500 }}>End Date</label>
-                <input 
-                  type="date" 
-                  value={endDate}
-                  min={startDate}
-                  onChange={e => setEndDate(e.target.value)}
-                />
+            {!isMultipleDates ? (
+              <div className="flex gap-md flex-col-mobile">
+                <div className="flex-col gap-sm" style={{ flex: 1 }}>
+                  <label style={{ fontWeight: 500 }}>Start Date</label>
+                  <input 
+                    type="date" 
+                    value={startDate}
+                    onChange={e => {
+                      const newStartDate = e.target.value;
+                      setStartDate(newStartDate);
+                      if (endDate && newStartDate > endDate) {
+                        setEndDate(newStartDate);
+                      }
+                    }}
+                  />
+                </div>
+
+                <div className="flex-col gap-sm" style={{ flex: 1 }}>
+                  <label style={{ fontWeight: 500 }}>End Date</label>
+                  <input 
+                    type="date" 
+                    value={endDate}
+                    min={startDate}
+                    onChange={e => setEndDate(e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex-col gap-sm">
+                <label style={{ fontWeight: 500 }}>Dates</label>
+                {dateRanges.map((range, index) => (
+                  <div key={range.id} className="flex gap-md flex-col-mobile" style={{ alignItems: 'flex-end' }}>
+                    <div className="flex-col gap-sm" style={{ flex: 1 }}>
+                      <input 
+                        type="date" 
+                        value={range.startDate}
+                        onChange={e => {
+                          const newStartDate = e.target.value;
+                          setDateRanges(prev => prev.map(r => {
+                            if (r.id === range.id) {
+                              return { ...r, startDate: newStartDate, endDate: (r.endDate && newStartDate > r.endDate) ? newStartDate : r.endDate };
+                            }
+                            return r;
+                          }));
+                        }}
+                      />
+                    </div>
+                    <div className="flex-col gap-sm" style={{ flex: 1 }}>
+                      <input 
+                        type="date" 
+                        value={range.endDate}
+                        min={range.startDate}
+                        onChange={e => {
+                          setDateRanges(prev => prev.map(r => r.id === range.id ? { ...r, endDate: e.target.value } : r));
+                        }}
+                      />
+                    </div>
+                    {dateRanges.length > 1 && (
+                      <button 
+                        type="button" 
+                        className="btn-icon" 
+                        style={{ padding: '10px', color: 'var(--text-secondary)' }}
+                        onClick={() => setDateRanges(prev => prev.filter(r => r.id !== range.id))}
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button 
+                  type="button" 
+                  className="btn" 
+                  style={{ border: '1px dashed var(--border)', marginTop: '8px', alignSelf: 'flex-start' }}
+                  onClick={() => setDateRanges(prev => [...prev, { id: Date.now().toString() + Math.random(), startDate: format(new Date(), 'yyyy-MM-dd'), endDate: format(new Date(), 'yyyy-MM-dd') }])}
+                >
+                  <Plus size={16} style={{ marginRight: '4px' }} /> Add Date
+                </button>
+              </div>
+            )}
 
             <div className="flex-col gap-sm">
               <label style={{ fontWeight: 500 }}>Priority</label>
