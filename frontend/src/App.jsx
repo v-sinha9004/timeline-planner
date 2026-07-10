@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
@@ -11,15 +12,17 @@ import AllTasksView from './pages/AllTasksView';
 import SubjectsView from './pages/SubjectsView';
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <ThemeProvider>
       <UserProvider>
         <DataProvider>
           <BrowserRouter>
             <div className="app-container">
-              <Sidebar />
+              <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
               <div className="main-content">
-                <TopBar />
+                <TopBar onMenuClick={() => setIsSidebarOpen(true)} />
                 <div className="page-content">
                   <Routes>
                     <Route path="/" element={<TodayView />} />

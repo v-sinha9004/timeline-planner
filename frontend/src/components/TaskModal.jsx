@@ -85,7 +85,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
               />
             </div>
 
-            <div className="flex gap-md">
+            <div className="flex gap-md flex-col-mobile">
               <div className="flex-col gap-sm" style={{ flex: 1 }}>
                 <label style={{ fontWeight: 500 }}>Subject *</label>
                 <select 
@@ -132,7 +132,7 @@ export default function TaskModal({ isOpen, onClose, taskToEdit = null }) {
               )}
             </div>
 
-            <div className="flex gap-md">
+            <div className="flex gap-md flex-col-mobile">
               <div className="flex-col gap-sm" style={{ flex: 1 }}>
                 <label style={{ fontWeight: 500 }}>Start Date</label>
                 <input 

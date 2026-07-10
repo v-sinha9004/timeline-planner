@@ -60,11 +60,11 @@ export default function AllTasksView() {
                 <th style={{ width: '40px' }}></th>
                 <th>Task</th>
                 <th>Subject</th>
-                <th>Start Date</th>
-                <th>End Date</th>
+                <th className="hide-on-mobile">Start Date</th>
+                <th className="hide-on-mobile">End Date</th>
                 <th>Priority</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th className="hide-on-mobile">Actions</th>
               </tr>
             </thead>
             <tbody>

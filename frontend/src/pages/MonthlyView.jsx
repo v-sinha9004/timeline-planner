@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, Loader2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth } from 'date-fns';
 import { useData } from '../contexts/DataContext';
 import { useUser } from '../contexts/UserContext';
@@ -168,15 +169,17 @@ export default function MonthlyView() {
           <h3 style={{ color: 'var(--text-secondary)' }}>Loading {activeUser}'s tasks...</h3>
         </div>
       ) : (
-        <div className="monthly-grid">
-          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
-            <div key={d} className="month-day-header">{d}</div>
-          ))}
-          {rows}
+        <div className="monthly-grid-wrapper">
+          <div className="monthly-grid">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => (
+              <div key={d} className="month-day-header">{d}</div>
+            ))}
+            {rows}
+          </div>
         </div>
       )}
 
-      {selectedDay && (
+      {selectedDay && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedDay(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
@@ -255,7 +258,8 @@ export default function MonthlyView() {
               })()}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

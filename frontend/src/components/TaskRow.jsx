@@ -197,7 +197,7 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
           )}
         </div>
       </td>
-      <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+      <td className="hide-on-mobile" style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
         {isEditing ? (
           <input 
             type="date" 
@@ -209,7 +209,7 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
           task.startDate ? format(new Date(task.startDate), 'MMM d, yyyy') : '--'
         )}
       </td>
-      <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+      <td className="hide-on-mobile" style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
         {isEditing ? (
           <input 
             type="date" 
@@ -252,7 +252,7 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
           </select>
         </td>
       )}
-      <td style={{ width: '120px' }}>
+      <td className="hide-on-mobile" style={{ width: '120px' }}>
         <div style={{ display: 'flex', gap: '4px' }}>
           {isEditing ? (
             <>

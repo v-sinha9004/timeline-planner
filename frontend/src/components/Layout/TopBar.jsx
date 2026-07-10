@@ -1,12 +1,12 @@
 import { useLocation } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Menu } from 'lucide-react';
 import ThemeToggle from '../ThemeToggle';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import TaskModal from '../TaskModal';
 import { useUser } from '../../contexts/UserContext';
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }) {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { activeUser, setActiveUser } = useUser();
@@ -24,7 +24,12 @@ export default function TopBar() {
 
   return (
     <div className="topbar">
-      <h2 className="topbar-title">{getPageTitle()}</h2>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button className="mobile-menu-btn" onClick={onMenuClick}>
+          <Menu size={24} />
+        </button>
+        <h2 className="topbar-title">{getPageTitle()}</h2>
+      </div>
       
       <div className="topbar-center" style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>
         {format(new Date(), 'EEEE, MMMM d, yyyy')}
