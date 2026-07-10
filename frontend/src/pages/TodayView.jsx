@@ -7,15 +7,36 @@ import ConfettiOverlay from '../components/ConfettiOverlay';
 import ProgressRing from '../components/ProgressRing';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 
 export default function TodayView() {
-  const { getTasksForDate, getSubjectById, syncStatus } = useData();
+  const { getTasksForDate, getSubjectById, syncStatus, subjects, addTask } = useData();
   const { activeUser } = useUser();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const tasks = getTasksForDate(todayStr);
 
   const [sortByPriority, setSortByPriority] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+
+    const otherSubject = subjects.find(s => s.name === 'Other');
+    if (!otherSubject) return;
+
+    addTask({
+      title: chatMessage.trim(),
+      subjectId: otherSubject.id,
+      subtopicId: null,
+      startDate: todayStr,
+      endDate: todayStr,
+      priority: 'MEDIUM',
+      status: 'PENDING'
+    });
+
+    setChatMessage('');
+  };
 
   const completedCount = tasks.filter(t => t.status === 'COMPLETED' || (t.completedDates || []).includes(todayStr)).length;
   const progress = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
@@ -104,6 +125,61 @@ export default function TodayView() {
           </div>
         )}
       </div>
+
+      <form 
+        onSubmit={handleChatSubmit}
+        style={{
+          position: 'sticky',
+          bottom: '24px',
+          marginTop: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          backgroundColor: 'var(--bg-primary)',
+          padding: '8px 12px',
+          borderRadius: '30px',
+          boxShadow: '0 10px 25px -5px rgba(232, 80, 122, 0.15), 0 8px 10px -6px rgba(232, 80, 122, 0.1)',
+          border: '1px solid var(--border-strong)',
+          zIndex: 10,
+        }}
+      >
+        <span style={{ fontSize: '20px', paddingLeft: '8px' }}>✨</span>
+        <input
+          type="text"
+          placeholder="Type a quick task for today..."
+          value={chatMessage}
+          onChange={(e) => setChatMessage(e.target.value)}
+          style={{
+            flex: 1,
+            border: 'none',
+            backgroundColor: 'transparent',
+            padding: '8px 0',
+            fontSize: '15px',
+            outline: 'none',
+            boxShadow: 'none'
+          }}
+        />
+        <button 
+          type="submit"
+          disabled={!chatMessage.trim()}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: chatMessage.trim() ? 'var(--accent)' : 'var(--bg-tertiary)',
+            color: chatMessage.trim() ? 'white' : 'var(--text-tertiary)',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            cursor: chatMessage.trim() ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s',
+            boxShadow: chatMessage.trim() ? '0 4px 12px rgba(232, 80, 122, 0.3)' : 'none',
+          }}
+        >
+          <Send size={18} style={{ marginLeft: '2px', marginTop: '2px' }} />
+        </button>
+      </form>
 
       <ConfettiOverlay show={allDone} />
     </div>

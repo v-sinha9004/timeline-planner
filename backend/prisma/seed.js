@@ -12,6 +12,11 @@ const subjects = [
   { id: 'subj-essay-001', name: 'Essay', color: '#a3866a', icon: '✍️', order: 6 },
   { id: 'subj-csat-001', name: 'CSAT', color: '#2dd4bf', icon: '🧠', order: 7 },
   { id: 'subj-current-affairs-001', name: 'Current Affairs', color: '#f87171', icon: '📰', order: 8 },
+  { id: 'subj-revision-001', name: 'Revision', color: '#6366f1', icon: '🔁', order: 9 },
+  { id: 'subj-grouped-001', name: 'Grouped', color: '#ec4899', icon: '📚', order: 10 },
+  { id: 'subj-answer-writing-001', name: 'Answer Writing', color: '#14b8a6', icon: '📝', order: 11 },
+  { id: 'subj-test-001', name: 'Test', color: '#8b5cf6', icon: '✅', order: 12 },
+  { id: 'subj-other-001', name: 'Other', color: '#9ca3af', icon: '✨', order: 13 },
 ];
 
 async function main() {

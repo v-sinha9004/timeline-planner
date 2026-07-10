@@ -5,13 +5,15 @@ import { useData } from '../contexts/DataContext';
 import { format, eachDayOfInterval, parseISO, isValid } from 'date-fns';
 
 export default function TaskRow({ task, subject, dateStr, hideStatus = false, readOnlyCheckbox = false }) {
-  const { updateTask, deleteTask } = useData();
+  const { updateTask, deleteTask, subjects } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editPriority, setEditPriority] = useState(task.priority);
   const [editStartDate, setEditStartDate] = useState(task.startDate || '');
   const [editEndDate, setEditEndDate] = useState(task.endDate || '');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSubjectDropdownOpen, setIsSubjectDropdownOpen] = useState(false);
+  const subjectDropdownRef = useRef(null);
   const inputRef = useRef(null);
 
   let isCompleted = false;
@@ -51,6 +53,18 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false, re
       inputRef.current.focus();
     }
   }, [isEditing]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (subjectDropdownRef.current && !subjectDropdownRef.current.contains(event.target)) {
+        setIsSubjectDropdownOpen(false);
+      }
+    };
+    if (isSubjectDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSubjectDropdownOpen]);
 
   const getAllTaskDates = (t) => {
     if (t.startDate && t.endDate) {
@@ -191,9 +205,88 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false, re
       </td>
       <td>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-          <SubjectBadge subject={subject} />
+          <div 
+            ref={subjectDropdownRef}
+            style={{ position: 'relative', cursor: 'pointer' }}
+          >
+            <div 
+              onClick={() => setIsSubjectDropdownOpen(!isSubjectDropdownOpen)}
+              style={{
+                transition: 'all 0.2s',
+                borderRadius: '8px',
+                padding: '2px',
+                border: isSubjectDropdownOpen ? '1px solid var(--border-strong)' : '1px solid transparent',
+              }}
+              onMouseOver={(e) => {
+                if (!isSubjectDropdownOpen) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                }
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <SubjectBadge subject={subject} />
+            </div>
+
+            {isSubjectDropdownOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: '4px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                padding: '8px',
+                zIndex: 50,
+                minWidth: '200px',
+                maxHeight: '280px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontWeight: '600', padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Change Subject
+                </div>
+                {subjects.map(s => (
+                  <div 
+                    key={s.id}
+                    onClick={() => {
+                      if (s.id !== task.subjectId) {
+                        updateTask(task.id, { subjectId: s.id, subtopicId: null });
+                      }
+                      setIsSubjectDropdownOpen(false);
+                    }}
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      backgroundColor: s.id === task.subjectId ? 'var(--bg-secondary)' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseOver={(e) => {
+                      if (s.id !== task.subjectId) e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+                    }}
+                    onMouseOut={(e) => {
+                      if (s.id !== task.subjectId) e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <span style={{ fontSize: '14px' }}>{s.icon}</span>
+                    <span style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: s.id === task.subjectId ? '500' : '400' }}>{s.name}</span>
+                    {s.id === task.subjectId && <Check size={14} style={{ marginLeft: 'auto', color: 'var(--primary)' }} />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {task.subtopicId && subject && subject.subtopics && (
-            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', paddingLeft: '8px' }}>
               ↳ {subject.subtopics.find(st => st.id === task.subtopicId)?.name || 'Unknown Sub-topic'}
             </span>
           )}
