@@ -139,12 +139,14 @@ input:focus, select:focus, textarea:focus {
   margin-left: var(--sidebar-width);
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .page-content {
   padding: 24px;
   margin-top: var(--topbar-height);
   flex: 1;
+  min-width: 0;
 }
 
 /* Utilities */
@@ -406,7 +408,7 @@ input:focus, select:focus, textarea:focus {
 /* Monthly Grid */
 .monthly-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
   background-color: var(--border);
   border: 1px solid var(--border);
@@ -559,14 +561,14 @@ input:focus, select:focus, textarea:focus {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 16px;
   z-index: 1000;
 }
 .modal {
@@ -742,10 +744,6 @@ input:focus, select:focus, textarea:focus {
     left: 16px;
     transform: none;
     flex-wrap: wrap;
-  }
-  .modal {
-    max-width: calc(100% - 32px);
-    margin: 16px;
   }
   .user-toggle {
     width: 140px;
