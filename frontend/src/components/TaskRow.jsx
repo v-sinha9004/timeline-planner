@@ -4,13 +4,14 @@ import SubjectBadge from './SubjectBadge';
 import { useData } from '../contexts/DataContext';
 import { format, eachDayOfInterval, parseISO, isValid } from 'date-fns';
 
-export default function TaskRow({ task, subject, dateStr, hideStatus = false }) {
+export default function TaskRow({ task, subject, dateStr, hideStatus = false, readOnlyCheckbox = false }) {
   const { updateTask, deleteTask } = useData();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [editPriority, setEditPriority] = useState(task.priority);
   const [editStartDate, setEditStartDate] = useState(task.startDate || '');
   const [editEndDate, setEditEndDate] = useState(task.endDate || '');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const inputRef = useRef(null);
 
   let isCompleted = false;
@@ -160,7 +161,8 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
       <td style={{ width: '40px' }}>
         <div 
           className={`custom-checkbox ${isCompleted ? 'checked' : ''}`}
-          onClick={toggleComplete}
+          onClick={readOnlyCheckbox ? undefined : toggleComplete}
+          style={readOnlyCheckbox ? { cursor: 'not-allowed', opacity: 0.7 } : undefined}
         >
           {isCompleted && <Check size={14} />}
         </div>
@@ -252,8 +254,8 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
           </select>
         </td>
       )}
-      <td className="hide-on-mobile" style={{ width: '120px' }}>
-        <div style={{ display: 'flex', gap: '4px' }}>
+      <td className="hide-on-mobile" style={{ width: '120px', position: 'relative' }}>
+        <div style={{ display: 'flex', gap: '4px', position: 'relative' }}>
           {isEditing ? (
             <>
               <button className="btn-icon" title="Save" onClick={handleSave}>
@@ -268,7 +270,45 @@ export default function TaskRow({ task, subject, dateStr, hideStatus = false }) 
               <Edit2 size={16} />
             </button>
           )}
-          <button className="btn-icon" title="Delete" onClick={() => deleteTask(task.id)}>
+          {showDeleteConfirm && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%',
+              right: 0,
+              marginBottom: '4px',
+              backgroundColor: '#fff1f2', // pink-50
+              border: '1px solid #fecdd3', // pink-300
+              borderRadius: '8px',
+              padding: '8px 12px',
+              boxShadow: '0 10px 15px -3px rgba(225, 29, 72, 0.1), 0 4px 6px -4px rgba(225, 29, 72, 0.1)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              zIndex: 50,
+              minWidth: '140px'
+            }}>
+              <span style={{ fontSize: '13px', color: '#be123c', fontWeight: '500', textAlign: 'center', margin: 0 }}>Delete this task?</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button 
+                  onClick={() => deleteTask(task.id)}
+                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: '#f43f5e', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#e11d48'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#f43f5e'}
+                >
+                  Yes
+                </button>
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{ padding: '4px 0', fontSize: '12px', backgroundColor: 'transparent', color: '#be123c', border: '1px solid #fda4af', borderRadius: '4px', cursor: 'pointer', flex: 1, fontWeight: '500' }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#ffe4e6'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
+          <button className="btn-icon" title="Delete" onClick={() => setShowDeleteConfirm(true)}>
             <Trash2 size={16} />
           </button>
         </div>

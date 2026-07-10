@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Check, X, Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth } from 'date-fns';
+import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, startOfToday, eachDayOfInterval, getDate } from 'date-fns';
 import { useData } from '../contexts/DataContext';
 import { useUser } from '../contexts/UserContext';
+import ProgressRing from '../components/ProgressRing';
 
 export default function MonthlyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -15,6 +16,17 @@ export default function MonthlyView() {
   const monthEnd = endOfMonth(monthStart);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
   const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+  const totalDaysThisMonth = getDate(monthEnd);
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const completedDaysCount = daysInMonth.filter(d => {
+    if (d > startOfToday()) return false;
+    const dateStr = format(d, 'yyyy-MM-dd');
+    const dayTasks = getTasksForDate(dateStr);
+    if (dayTasks.length === 0) return false;
+    return dayTasks.every(task => task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr));
+  }).length;
+  const monthProgress = totalDaysThisMonth > 0 ? (completedDaysCount / totalDaysThisMonth) * 100 : 0;
 
   const dateFormat = "d";
   const rows = [];
@@ -32,13 +44,26 @@ export default function MonthlyView() {
       const isCurrentMonth = isSameMonth(day, monthStart);
       const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
       
-      const dayTasks = getTasksForDate(format(day, 'yyyy-MM-dd'));
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const dayTasks = getTasksForDate(dateStr);
+      
+      let cellBg = undefined;
+      if (day <= startOfToday() && dayTasks.length > 0) {
+        const allCompleted = dayTasks.every(task => task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr));
+        
+        if (allCompleted) {
+          cellBg = '#bbf7d0'; // green-200 for complete
+        } else if (day < startOfToday()) {
+          cellBg = '#fda4af'; // rose-300 for darker pinkish red, only for past days
+        }
+      }
       
       days.push(
         <div 
           className={`calendar-cell ${!isCurrentMonth ? 'other-month' : ''}`}
           key={day}
           onClick={() => setSelectedDay(cloneDay)}
+          style={{ backgroundColor: cellBg }}
         >
           <div className={`date-number ${isToday ? 'today' : ''}`}>{formattedDate}</div>
           
@@ -152,10 +177,18 @@ export default function MonthlyView() {
 
   return (
     <div className="monthly-view">
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h3 style={{ margin: 0, fontSize: '24px' }}>
-          {format(currentDate, 'MMMM yyyy')}
-        </h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '24px' }}>
+            {format(currentDate, 'MMMM yyyy')}
+          </h3>
+          <ProgressRing 
+            progress={monthProgress} 
+            size={48} 
+            strokeWidth={4} 
+            label={`${completedDaysCount}/${totalDaysThisMonth}`}
+          />
+        </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="btn-icon" onClick={prevMonth}><ChevronLeft size={20} /></button>
           <button className="btn" style={{ border: '1px solid var(--border)' }} onClick={() => setCurrentDate(new Date())}>Today</button>

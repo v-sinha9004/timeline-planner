@@ -3,7 +3,7 @@ import { useUser } from './UserContext';
 
 const DataContext = createContext();
 
-const API_BASE = 'https://timeline-planner-gamma.vercel.app';
+const API_BASE = 'http://localhost:5002';
 
 const DEFAULT_SUBJECTS = [
   { id: 'subj-history-001', name: 'Indian History', color: '#f59e0b', icon: '📜', order: 0, subtopics: [] },
@@ -41,6 +41,8 @@ function dataReducer(state, action) {
       return { ...state, syncStatus: action.payload };
     case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
+    case 'ADD_MULTIPLE_TASKS':
+      return { ...state, tasks: [...state.tasks, ...action.payload] };
     case 'UPDATE_TASK':
       return {
         ...state,
@@ -109,7 +111,7 @@ export function DataProvider({ children }) {
       if (Object.keys(updates).length > 0) {
         dispatch({ type: 'SET_STATE', payload: updates });
       }
-      
+
       dispatch({ type: 'SET_SYNC_STATUS', payload: isOffline ? 'offline' : 'synced' });
     });
   }, [activeUser]);
@@ -129,7 +131,7 @@ export function DataProvider({ children }) {
   const addTask = useCallback(async (task) => {
     const newTask = { ...task, id: crypto.randomUUID(), createdAt: new Date().toISOString(), owner: activeUser };
     dispatch({ type: 'ADD_TASK', payload: newTask });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/tasks`, {
@@ -144,9 +146,33 @@ export function DataProvider({ children }) {
     }
   }, [activeUser]);
 
+  const addMultipleTasks = useCallback(async (tasksArray) => {
+    const newTasks = tasksArray.map(task => ({
+      ...task,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      owner: activeUser
+    }));
+
+    dispatch({ type: 'ADD_MULTIPLE_TASKS', payload: newTasks });
+
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      await fetch(`${API_BASE}/api/tasks/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: newTasks })
+      });
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to save multiple tasks to server:', err);
+    }
+  }, [activeUser]);
+
   const updateTask = useCallback(async (id, updates) => {
     dispatch({ type: 'UPDATE_TASK', payload: { id, updates } });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/tasks/${id}`, {
@@ -163,7 +189,7 @@ export function DataProvider({ children }) {
 
   const deleteTask = useCallback(async (id) => {
     dispatch({ type: 'DELETE_TASK', payload: id });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/tasks/${id}`, { method: 'DELETE' });
@@ -177,7 +203,7 @@ export function DataProvider({ children }) {
   const addSubject = useCallback(async (subject) => {
     const newSubject = { ...subject, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     dispatch({ type: 'ADD_SUBJECT', payload: newSubject });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/subjects`, {
@@ -194,7 +220,7 @@ export function DataProvider({ children }) {
 
   const updateSubject = useCallback(async (id, updates) => {
     dispatch({ type: 'UPDATE_SUBJECT', payload: { id, updates } });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/subjects/${id}`, {
@@ -211,7 +237,7 @@ export function DataProvider({ children }) {
 
   const deleteSubject = useCallback(async (id) => {
     dispatch({ type: 'DELETE_SUBJECT', payload: id });
-    
+
     try {
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
       await fetch(`${API_BASE}/api/subjects/${id}`, { method: 'DELETE' });
@@ -229,6 +255,9 @@ export function DataProvider({ children }) {
 
   const getTasksForDate = useCallback((dateStr) => {
     return state.tasks.filter(t => {
+      // Skip this task on excluded dates
+      if ((t.excludedDates || []).includes(dateStr)) return false;
+
       const taskStart = t.startDate || t.date;
       const taskEnd = t.endDate || t.date;
       if (!taskStart && !taskEnd) return false;
@@ -242,6 +271,7 @@ export function DataProvider({ children }) {
   const value = {
     ...state,
     addTask,
+    addMultipleTasks,
     updateTask,
     deleteTask,
     addSubject,

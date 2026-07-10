@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export default function ProgressRing({ progress, size = 80, strokeWidth = 6 }) {
+export default function ProgressRing({ progress, size = 80, strokeWidth = 6, label }) {
   const [offset, setOffset] = useState(0);
   const center = size / 2;
   const radius = center - strokeWidth;
@@ -44,7 +44,7 @@ export default function ProgressRing({ progress, size = 80, strokeWidth = 6 }) {
         fontWeight: 600,
         color: 'var(--text-primary)'
       }}>
-        {Math.round(progress)}%
+        {label !== undefined ? label : `${Math.round(progress)}%`}
       </div>
     </div>
   );
