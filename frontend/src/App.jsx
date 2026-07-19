@@ -10,6 +10,7 @@ import WeeklyView from './pages/WeeklyView';
 import MonthlyView from './pages/MonthlyView';
 import AllTasksView from './pages/AllTasksView';
 import SubjectsView from './pages/SubjectsView';
+import VisualizeTaskView from './pages/VisualizeTaskView';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -30,6 +31,7 @@ function App() {
                     <Route path="/monthly" element={<MonthlyView />} />
                     <Route path="/tasks" element={<AllTasksView />} />
                     <Route path="/subjects" element={<SubjectsView />} />
+                    <Route path="/visualize" element={<VisualizeTaskView />} />
                   </Routes>
                 </div>
               </div>

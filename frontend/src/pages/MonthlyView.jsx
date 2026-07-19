@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Check, X, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Check, X, Loader2, Coffee } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, startOfToday, eachDayOfInterval, getDate } from 'date-fns';
 import { useData } from '../contexts/DataContext';
@@ -9,8 +9,13 @@ import ProgressRing from '../components/ProgressRing';
 export default function MonthlyView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
-  const { getTasksForDate, getSubjectById, updateTask, syncStatus } = useData();
+  const { getTasksForDate, getSubjectById, updateTask, syncStatus, breaks = [], fetchBreaks, addBreak, undoBreak } = useData();
   const { activeUser } = useUser();
+  const [showBreakPicker, setShowBreakPicker] = useState(false);
+  const [breakConfirmDate, setBreakConfirmDate] = useState(null);
+  const [breakUndoConfirm, setBreakUndoConfirm] = useState(null);
+  const [breakLoading, setBreakLoading] = useState(false);
+
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(monthStart);
@@ -48,7 +53,11 @@ export default function MonthlyView() {
       const dayTasks = getTasksForDate(dateStr);
       
       let cellBg = undefined;
-      if (day <= startOfToday() && dayTasks.length > 0) {
+      const activeBreak = breaks.find(b => b.date && b.date.substring(0,10) === dateStr);
+      
+      if (activeBreak) {
+        cellBg = 'var(--break-cell-bg, #fef3c7)';
+      } else if (day <= startOfToday() && dayTasks.length > 0) {
         const allCompleted = dayTasks.every(task => task.status === 'COMPLETED' || (task.completedDates || []).includes(dateStr));
         
         if (allCompleted) {
@@ -66,6 +75,14 @@ export default function MonthlyView() {
           style={{ backgroundColor: cellBg }}
         >
           <div className={`date-number ${isToday ? 'today' : ''}`}>{formattedDate}</div>
+          {activeBreak && (
+            <div 
+              className="break-cell-marker" 
+              onClick={(e) => { e.stopPropagation(); setBreakUndoConfirm(activeBreak); }}
+            >
+              ☕ Break
+            </div>
+          )}
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {dayTasks.slice(0, 3).map(task => {
@@ -175,6 +192,12 @@ export default function MonthlyView() {
     days = [];
   }
 
+  const currentMonthBreaksCount = breaks.filter(b => {
+    if (!b.date) return false;
+    const d = new Date(b.date);
+    return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+  }).length;
+
   return (
     <div className="monthly-view">
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
@@ -190,6 +213,14 @@ export default function MonthlyView() {
           />
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
+          <button 
+            className="btn break-btn"
+            disabled={currentMonthBreaksCount >= 2}
+            onClick={() => setShowBreakPicker(true)}
+          >
+            <Coffee size={16} /> Add Break
+            <span className="break-badge">({currentMonthBreaksCount}/2)</span>
+          </button>
           <button className="btn-icon" onClick={prevMonth}><ChevronLeft size={20} /></button>
           <button className="btn" style={{ border: '1px solid var(--border)' }} onClick={() => setCurrentDate(new Date())}>Today</button>
           <button className="btn-icon" onClick={nextMonth}><ChevronRight size={20} /></button>
@@ -289,6 +320,111 @@ export default function MonthlyView() {
                   );
                 });
               })()}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showBreakPicker && createPortal(
+        <div className="modal-overlay" onClick={() => setShowBreakPicker(false)}>
+          <div className="modal break-picker-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><Coffee size={20} color="#d97706" /> Select Break Date</h3>
+              <button className="btn-icon" onClick={() => setShowBreakPicker(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+              {daysInMonth.map(d => {
+                const dStr = format(d, 'yyyy-MM-dd');
+                const hasActiveBreak = breaks.some(b => b.date && b.date.substring(0,10) === dStr);
+                return (
+                  <button
+                    key={dStr}
+                    disabled={hasActiveBreak}
+                    onClick={() => {
+                      setBreakConfirmDate(dStr);
+                      setShowBreakPicker(false);
+                    }}
+                    style={{
+                      padding: '12px 4px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)',
+                      backgroundColor: hasActiveBreak ? '#fef3c7' : 'var(--bg-secondary)',
+                      color: hasActiveBreak ? '#d97706' : 'var(--text-primary)',
+                      opacity: hasActiveBreak ? 0.6 : 1,
+                      cursor: hasActiveBreak ? 'not-allowed' : 'pointer',
+                      textAlign: 'center',
+                      fontWeight: 500
+                    }}
+                  >
+                    {format(d, 'd')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {breakConfirmDate && createPortal(
+        <div className="modal-overlay break-confirm-overlay" onClick={() => !breakLoading && setBreakConfirmDate(null)}>
+          <div className="modal break-confirm-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, color: '#d97706' }}>Confirm Break</h3>
+            </div>
+            <div className="modal-body">
+              <p>Insert a break on <strong>{format(new Date(breakConfirmDate), 'MMMM d, yyyy')}</strong>?</p>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>All tasks on and after this date will be pushed forward by 1 day.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn" style={{ border: '1px solid var(--border)' }} onClick={() => setBreakConfirmDate(null)} disabled={breakLoading}>Cancel</button>
+              <button 
+                className="btn break-btn"
+                disabled={breakLoading}
+                onClick={async () => {
+                  setBreakLoading(true);
+                  try {
+                    await addBreak(breakConfirmDate);
+                    setBreakConfirmDate(null);
+                  } catch(e) {}
+                  setBreakLoading(false);
+                }}
+              >
+                {breakLoading ? <Loader2 size={16} className="animate-spin" /> : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {breakUndoConfirm && createPortal(
+        <div className="modal-overlay break-confirm-overlay" onClick={() => !breakLoading && setBreakUndoConfirm(null)}>
+          <div className="modal break-confirm-dialog" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, color: '#d97706' }}>Undo Break</h3>
+            </div>
+            <div className="modal-body">
+              <p>Undo break on <strong>{breakUndoConfirm.date && format(new Date(breakUndoConfirm.date), 'MMMM d, yyyy')}</strong>?</p>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '8px' }}>All tasks after this date will shift back by 1 day.</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn" style={{ border: '1px solid var(--border)' }} onClick={() => setBreakUndoConfirm(null)} disabled={breakLoading}>Cancel</button>
+              <button 
+                className="btn break-btn"
+                disabled={breakLoading}
+                onClick={async () => {
+                  setBreakLoading(true);
+                  try {
+                    await undoBreak(breakUndoConfirm._id || breakUndoConfirm.id);
+                    setBreakUndoConfirm(null);
+                  } catch(e) {}
+                  setBreakLoading(false);
+                }}
+              >
+                {breakLoading ? <Loader2 size={16} className="animate-spin" /> : 'Confirm'}
+              </button>
             </div>
           </div>
         </div>,

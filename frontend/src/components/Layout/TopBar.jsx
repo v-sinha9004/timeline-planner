@@ -10,7 +10,7 @@ export default function TopBar({ onMenuClick }) {
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { activeUser, setActiveUser } = useUser();
-  
+
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/': return 'Today';
@@ -18,6 +18,7 @@ export default function TopBar({ onMenuClick }) {
       case '/monthly': return 'Monthly Overview';
       case '/tasks': return 'All Tasks';
       case '/subjects': return 'Subjects';
+      case '/visualize': return 'Visualize Tasks';
       default: return 'UPSC Study Planner';
     }
   };
@@ -30,34 +31,34 @@ export default function TopBar({ onMenuClick }) {
         </button>
         <h2 className="topbar-title">{getPageTitle()}</h2>
       </div>
-      
+
       <div className="topbar-center" style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>
         {format(new Date(), 'EEEE, MMMM d, yyyy')}
       </div>
 
       <div className="topbar-actions">
         <div className="user-toggle">
-          <div 
-            className="user-toggle-slider" 
-            style={{ 
-              transform: activeUser === 'Vishal' ? 'translateX(0)' : 'translateX(100%)' 
-            }} 
+          <div
+            className="user-toggle-slider"
+            style={{
+              transform: activeUser === 'Vishal' ? 'translateX(0)' : 'translateX(100%)'
+            }}
           />
-          <button 
+          <button
             className={`user-toggle-btn ${activeUser === 'Vishal' ? 'active' : ''}`}
             onClick={() => setActiveUser('Vishal')}
           >
             Vishal
           </button>
-          <button 
+          <button
             className={`user-toggle-btn ${activeUser === 'Aradhana' ? 'active' : ''}`}
             onClick={() => setActiveUser('Aradhana')}
           >
             Aradhana
           </button>
         </div>
-        <button 
-          className="btn btn-primary" 
+        <button
+          className="btn btn-primary"
           style={{ padding: '8px', borderRadius: '50%' }}
           onClick={() => setIsModalOpen(true)}
         >

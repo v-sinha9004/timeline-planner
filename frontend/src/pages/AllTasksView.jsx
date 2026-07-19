@@ -21,11 +21,11 @@ export default function AllTasksView() {
 
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (sortConfig.key === 'none') return 0;
-    
+
     // Put items without dates at the end of the list depending on sort order
     const dateA = a[sortConfig.key] ? new Date(a[sortConfig.key]).getTime() : (sortConfig.direction === 'asc' ? Infinity : -Infinity);
     const dateB = b[sortConfig.key] ? new Date(b[sortConfig.key]).getTime() : (sortConfig.direction === 'asc' ? Infinity : -Infinity);
-    
+
     if (dateA < dateB) return sortConfig.direction === 'asc' ? -1 : 1;
     if (dateA > dateB) return sortConfig.direction === 'asc' ? 1 : -1;
     return 0;
@@ -36,15 +36,15 @@ export default function AllTasksView() {
       <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 200px' }}>
           <Search size={16} style={{ position: 'absolute', left: '12px', top: '10px', color: 'var(--text-secondary)' }} />
-          <input 
-            type="text" 
-            placeholder="Search tasks..." 
+          <input
+            type="text"
+            placeholder="Search tasks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             style={{ paddingLeft: '36px', width: '100%' }}
           />
         </div>
-        
+
         <select style={{ flex: '1 1 120px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="ALL">All Statuses</option>
           <option value="PENDING">Pending</option>
@@ -60,7 +60,7 @@ export default function AllTasksView() {
         </select>
 
         <div style={{ position: 'relative', flex: '1 1 160px' }}>
-          <select 
+          <select
             value={`${sortConfig.key}-${sortConfig.direction}`}
             onChange={(e) => {
               const [key, direction] = e.target.value.split('-');
@@ -97,6 +97,10 @@ export default function AllTasksView() {
         </div>
       </div>
 
+      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px', paddingLeft: '4px', fontWeight: '500' }}>
+        Total tasks: {sortedTasks.length}
+      </div>
+
       <div className="table-container" style={{ backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
         {syncStatus === 'fetching' ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', color: 'var(--accent)' }}>
@@ -119,10 +123,10 @@ export default function AllTasksView() {
             <tbody>
               {sortedTasks.length > 0 ? (
                 sortedTasks.map(task => (
-                  <TaskRow 
-                    key={task.id} 
-                    task={task} 
-                    subject={getSubjectById(task.subjectId)} 
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    subject={getSubjectById(task.subjectId)}
                     readOnlyCheckbox={true}
                     hideStatus={true}
                   />

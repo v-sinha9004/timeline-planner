@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Calendar, CalendarRange, CalendarDays, ListTodo, LibraryBig, Timer } from 'lucide-react';
+import { Calendar, CalendarRange, CalendarDays, ListTodo, LibraryBig, Timer, GanttChartSquare } from 'lucide-react';
 import SyncIndicator from '../SyncIndicator';
 import { useUser } from '../../contexts/UserContext';
 
@@ -32,6 +32,9 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         </NavLink>
         <NavLink to="/subjects" onClick={() => setIsOpen(false)} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
           <LibraryBig size={18} /> Subjects
+        </NavLink>
+        <NavLink to="/visualize" onClick={() => setIsOpen(false)} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <GanttChartSquare size={18} /> Visualize Task
         </NavLink>
       </nav>
 

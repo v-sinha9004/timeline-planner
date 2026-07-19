@@ -3,7 +3,7 @@ import { useUser } from './UserContext';
 
 const DataContext = createContext();
 
-const API_BASE = 'https://timeline-planner-gamma.vercel.app';
+const API_BASE = 'http://localhost:5002';
 
 const DEFAULT_SUBJECTS = [
   { id: 'subj-history-001', name: 'Indian History', color: '#f59e0b', icon: '📜', order: 0, subtopics: [] },
@@ -30,6 +30,7 @@ const DEFAULT_SUBJECTS = [
 const initialState = {
   subjects: DEFAULT_SUBJECTS,
   tasks: [],
+  breaks: [],
   syncStatus: 'synced', // 'synced' | 'syncing' | 'offline' | 'error'
 };
 
@@ -86,7 +87,8 @@ export function DataProvider({ children }) {
     Promise.all([
       fetch(`${API_BASE}/api/subjects`).then(res => res.json()).catch(() => null),
       fetch(`${API_BASE}/api/tasks?owner=${activeUser}`).then(res => res.json()).catch(() => null),
-    ]).then(([subjects, tasks]) => {
+      fetch(`${API_BASE}/api/breaks?owner=${activeUser}`).then(res => res.json()).catch(() => null),
+    ]).then(([subjects, tasks, breaks]) => {
       let isOffline = false;
       const updates = {};
 
@@ -105,6 +107,12 @@ export function DataProvider({ children }) {
           endDate: t.endDate ? t.endDate.substring(0, 10) : null,
         }));
       } else if (tasks === null) {
+        isOffline = true;
+      }
+
+      if (breaks && Array.isArray(breaks)) {
+        updates.breaks = breaks;
+      } else if (breaks === null) {
         isOffline = true;
       }
 
@@ -248,12 +256,97 @@ export function DataProvider({ children }) {
     }
   }, []);
 
+  const fetchBreaks = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/breaks?owner=${activeUser}`);
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch breaks');
+      }
+      
+      dispatch({ type: 'SET_STATE', payload: { breaks: data } });
+      return data;
+    } catch (err) {
+      console.error('Failed to fetch breaks:', err);
+      dispatch({ type: 'SET_STATE', payload: { breaks: [] } });
+      return [];
+    }
+  }, [activeUser]);
+
+  const addBreak = useCallback(async (dateStr) => {
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      const res = await fetch(`${API_BASE}/api/breaks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner: activeUser, date: dateStr })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to add break');
+      }
+
+      const tasksRes = await fetch(`${API_BASE}/api/tasks?owner=${activeUser}`);
+      const tasksData = await tasksRes.json();
+      const normalizedTasks = tasksData.map(t => ({
+        ...t,
+        date: t.date ? t.date.substring(0, 10) : null,
+        startDate: t.startDate ? t.startDate.substring(0, 10) : null,
+        endDate: t.endDate ? t.endDate.substring(0, 10) : null,
+      }));
+      dispatch({ type: 'SET_STATE', payload: { tasks: normalizedTasks } });
+
+      await fetchBreaks();
+
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+      return data;
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to add break:', err);
+      throw err;
+    }
+  }, [activeUser, fetchBreaks]);
+
+  const undoBreak = useCallback(async (breakId) => {
+    try {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+      const res = await fetch(`${API_BASE}/api/breaks/${breakId}/undo`, {
+        method: 'PUT'
+      });
+      const data = await res.json();
+
+      const tasksRes = await fetch(`${API_BASE}/api/tasks?owner=${activeUser}`);
+      const tasksData = await tasksRes.json();
+      const normalizedTasks = tasksData.map(t => ({
+        ...t,
+        date: t.date ? t.date.substring(0, 10) : null,
+        startDate: t.startDate ? t.startDate.substring(0, 10) : null,
+        endDate: t.endDate ? t.endDate.substring(0, 10) : null,
+      }));
+      dispatch({ type: 'SET_STATE', payload: { tasks: normalizedTasks } });
+
+      await fetchBreaks();
+
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'synced' });
+      return data;
+    } catch (err) {
+      dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+      console.error('Failed to undo break:', err);
+      throw err;
+    }
+  }, [activeUser, fetchBreaks]);
+
   // Selectors
   const getSubjectById = useCallback((id) => {
     return state.subjects.find(s => s.id === id) || null;
   }, [state.subjects]);
 
   const getTasksForDate = useCallback((dateStr) => {
+    const isBreakDay = state.breaks.some(b => b.date && b.date.substring(0, 10) === dateStr);
+    if (isBreakDay) return [];
+
     return state.tasks.filter(t => {
       // Skip this task on excluded dates
       if ((t.excludedDates || []).includes(dateStr)) return false;
@@ -266,7 +359,7 @@ export function DataProvider({ children }) {
       if (taskEnd) return dateStr <= taskEnd;
       return false;
     });
-  }, [state.tasks]);
+  }, [state.tasks, state.breaks]);
 
   const value = {
     ...state,
@@ -278,7 +371,10 @@ export function DataProvider({ children }) {
     updateSubject,
     deleteSubject,
     getSubjectById,
-    getTasksForDate
+    getTasksForDate,
+    fetchBreaks,
+    addBreak,
+    undoBreak
   };
 
   return (

@@ -813,3 +813,116 @@ input:focus, select:focus, textarea:focus {
     flex-direction: column !important;
   }
 }
+
+/* Break Feature Styles */
+.break-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+  transition: all 0.2s ease;
+}
+.break-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(217, 119, 6, 0.3);
+  filter: brightness(1.05);
+}
+.break-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #fcd34d;
+  color: #92400e;
+}
+
+.break-badge {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+.break-cell-marker {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-primary),
+    var(--bg-primary) 10px,
+    #fef3c7 10px,
+    #fef3c7 20px
+  );
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  border: 1px solid #fde68a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.break-cell-marker:hover {
+  background: #fde68a;
+  transform: scale(1.02);
+}
+
+html[data-theme="dark"] .break-cell-marker {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--bg-primary),
+    var(--bg-primary) 10px,
+    rgba(217, 119, 6, 0.1) 10px,
+    rgba(217, 119, 6, 0.1) 20px
+  );
+  border-color: rgba(217, 119, 6, 0.3);
+  color: #f59e0b;
+}
+html[data-theme="dark"] .break-cell-marker:hover {
+  background: rgba(217, 119, 6, 0.2);
+}
+
+.break-picker-modal {
+  max-width: 320px;
+  border: 1px solid #fde68a;
+}
+html[data-theme="dark"] .break-picker-modal {
+  border-color: rgba(217, 119, 6, 0.3);
+}
+
+.break-confirm-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.break-confirm-dialog {
+  border-top: 4px solid #d97706;
+}
+
+.break-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #d97706;
+  color: white;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-weight: 500;
+  z-index: 2000;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

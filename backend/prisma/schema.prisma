@@ -53,6 +53,7 @@ model Task {
   status       TaskStatus  @default(PENDING)
   isTest       Boolean     @default(false)
   tags         String[]
+  excludedDates String[] @default([])
   completedDates String[] @default([])
   order        Int         @default(0)
   createdAt    DateTime    @default(now())
@@ -87,4 +88,16 @@ enum RecurrenceType {
   DAILY
   WEEKLY
   MONTHLY
+}
+
+model Break {
+  id        String   @id @default(uuid())
+  owner     String
+  date      DateTime
+  month     Int
+  year      Int
+  undone    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([owner, year, month])
 }
